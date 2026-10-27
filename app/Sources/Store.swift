@@ -12,6 +12,9 @@ final class Store {
         }
     }
     /// Projects that ignore previews even when `trackPreviews` is on.
+    /// Every project id the app has seen, so a new one can be picked on arrival and an unticked one stays unticked.
+    /// nil until the first full refresh after an upgrade, which records what's there without picking any of it.
+    private var known: Set<String>? { didSet { save(known, "knownProjects") } }
     var productionOnly: Set<String> {
         didSet {
             save(productionOnly, "productionOnly")
@@ -48,7 +51,14 @@ final class Store {
     /// Keeps a hidden-when-idle icon around for a few seconds after a build lands, so the ✓ / ! is seen.
     private(set) var justLanded = false
     /// The menu panel is open; a hidden-when-idle icon must not vanish from under it.
-    var menuOpen = false
+    var menuOpen = false { didSet { if menuOpen && !oldValue { menuDidOpen() } } }
+    /// Opt-in: watch a folder of git repos and check right after a push (see PushWatcher).
+    var watchPushes: Bool { didSet { UserDefaults.standard.set(watchPushes, forKey: "watchPushes"); updatePushWatcher() } }
+    var pushFolder: String? { didSet { UserDefaults.standard.set(pushFolder, forKey: "pushFolder"); updatePushWatcher() } }
+    private var pushWatcher: PushWatcher?
+    /// After a push: check every 5s for a minute, or until the new build shows up.
+    private var burstUntil: Date?
+    private var napTask: Task<Void, Never>?
     private var lastOverall: DeployState?
     private var morphTask: Task<Void, Never>?
     private var justFinished = false
@@ -67,6 +77,7 @@ final class Store {
     init() {
         accounts = Self.load("accounts") ?? []
         selected = Self.load("selected") ?? []
+        known = Self.load("knownProjects")
         productionOnly = Self.load("productionOnly") ?? []
         trackPreviews = UserDefaults.standard.object(forKey: "trackPreviews") as? Bool ?? true
         notifyFailed = UserDefaults.standard.object(forKey: "notifyFailed") as? Bool ?? true
@@ -77,6 +88,8 @@ final class Store {
         iconStyle = UserDefaults.standard.string(forKey: "iconStyle").flatMap(IconStyle.init) ?? .plain
         animateIcon = UserDefaults.standard.object(forKey: "animateIcon") as? Bool ?? true
         iconOnlyWhenBusy = UserDefaults.standard.bool(forKey: "iconOnlyWhenBusy")
+        watchPushes = UserDefaults.standard.bool(forKey: "watchPushes")
+        pushFolder = UserDefaults.standard.string(forKey: "pushFolder")
         if let cache = Self.readCache() { // last-known rows instantly, honest "Updated 2h ago" until the first poll
             projects = cache.projects.filter { p in accounts.contains { $0.id == p.accountID } }
             lastUpdated = cache.savedAt
@@ -86,11 +99,15 @@ final class Store {
         center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
         Task { [weak self] in
             while !Task.isCancelled {
-                await self?.refresh()
-                let busy = self?.anyBuilding == true // not `overall`: an old failure elsewhere outranks building
+                guard let self else { return }
+                // Right after a push the new deploy can be on any picked project, so look at all of them.
+                if inPushBurst && !anyBuilding { lastPicked = nil }
+                await refresh()
+                if anyBuilding { burstUntil = nil } // it showed up; the normal building cadence takes over
+                let busy = anyBuilding || inPushBurst // not `overall`: an old failure elsewhere outranks building
                 // No full refresh has worked yet (e.g. launched at login before Wi-Fi): retry soon.
-                let offline = self?.lastFull == nil && self?.errors.isEmpty == false
-                try? await Task.sleep(for: .seconds(busy ? 5 : offline ? 10 : 60))
+                let offline = lastFull == nil && !errors.isEmpty
+                await nap(busy ? 5 : offline ? 10 : 60)
             }
         }
         // After sleep the data is stale and the poll loop may be mid-60s; look right away.
@@ -100,6 +117,7 @@ final class Store {
                 await self?.refresh(full: true)
             }
         }
+        updatePushWatcher() // property observers don't run in init
     }
 
     /// One row per picked project: its newest tracked deploy. Failed first (needs you), then building, then newest.
@@ -108,7 +126,7 @@ final class Store {
             .filter { selected.contains($0.id) }
             .compactMap { tracked($0).first }
             .sorted { a, b in
-                let rank = { (d: Deploy) in d.state == .failed ? 0 : d.state == .building ? 1 : 2 }
+                let rank = { (d: Deploy) in d.isRecentFailure ? 0 : d.state == .building ? 1 : 2 }
                 return rank(a) != rank(b) ? rank(a) < rank(b) : a.createdAt > b.createdAt
             }
     }
@@ -128,12 +146,13 @@ final class Store {
     }
 
     /// nil = nothing picked.
-    var overall: DeployState? { rows.map(\.state).max() }
+    /// An old failure counts as settled (like a cancel), so it never turns the menu bar red.
+    var overall: DeployState? { rows.map { $0.state == .failed && !$0.isRecentFailure ? .canceled : $0.state }.max() }
 
     /// The app's name is a question. This is the answer.
     var headline: String {
         let rows = rows
-        let failed = rows.filter { $0.state == .failed }
+        let failed = rows.filter(\.isRecentFailure)
         let building = rows.filter { $0.state == .building }
         if let first = failed.first {
             return failed.count == 1 ? "Nope. \(first.projectName) failed." : "Nope. \(failed.count) failed."
@@ -146,6 +165,36 @@ final class Store {
     /// Otherwise only teams with picked projects, and on fast 5s "something is building" ticks only teams whose
     /// picked project is building. Keeps 18 Cloudflare accounts well under the 1,200 requests / 5 min limit.
     /// The menu's Refresh / ⌘R: always asks every picked team, never the 5s "only what's building" pass.
+    private var inPushBurst: Bool { burstUntil.map { $0 > .now } ?? false }
+
+    /// The poll loop's sleep, which `wakePolling()` cuts short (menu opened, push noticed).
+    private func nap(_ seconds: Double) async {
+        let task = Task { _ = try? await Task.sleep(for: .seconds(seconds)) }
+        napTask = task
+        await task.value
+    }
+
+    private func wakePolling() { napTask?.cancel() }
+
+    /// Opening the menu shows current data: if it's more than a few seconds old, look now at every picked project.
+    private func menuDidOpen() {
+        guard !refreshing, lastUpdated.map({ Date.now.timeIntervalSince($0) > 10 }) ?? true else { return }
+        lastPicked = nil
+        wakePolling()
+    }
+
+    private func noticedPush() {
+        burstUntil = .now.addingTimeInterval(60)
+        wakePolling()
+    }
+
+    private func updatePushWatcher() {
+        pushWatcher?.stop()
+        pushWatcher = nil
+        guard watchPushes, let pushFolder, FileManager.default.fileExists(atPath: pushFolder) else { return }
+        pushWatcher = PushWatcher(folder: pushFolder) { [weak self] in self?.noticedPush() }
+    }
+
     func refreshNow() async {
         lastPicked = nil
         await refresh()
@@ -178,8 +227,10 @@ final class Store {
                 continue // permanent; retrying every 10s wouldn't help
             }
             do {
-                let result = try await account.provider.client(token: token)
+                let client = account.provider.client(token: token)
+                var result = try await client
                     .projects(account: account, teams: teams ?? Set(picked.map(\.teamID)), discover: teams == nil)
+                if full { result.projects = await autoPick(result.projects, account: account, client: client) }
                 let failed = Set(result.unreachable.map(\.id))
                 all += result.projects
                 // Last known for teams we didn't ask or that blipped; the dedupe below keeps fresh copies first.
@@ -204,10 +255,39 @@ final class Store {
         errors = errors.filter { live.contains($0.key) }
         lastUpdated = .now
         if full && !anyThrew { lastFull = .now } // after a failure, retry everything next tick
+        if full && !anyThrew && known == nil { known = Set(projects.map(\.id)) } // first run of auto-pick: picks nothing
         if !quick { lastPicked = .now }
         Self.writeCache(projects)
         notifyFinished()
         updateWobble()
+    }
+
+    /// Picks projects that appeared since the last full refresh. Vercel and Cloudflare: right away. GitHub: once the
+    /// repo has a workflow run, since a token sees every repo and discovery doesn't fetch runs; so new repos get one
+    /// runs call per full refresh until they have one, or until they've gone two weeks without a push.
+    private func autoPick(_ fetched: [Project], account: Account, client: any ProviderClient) async -> [Project] {
+        guard known != nil else { return fetched } // refresh() records the first full pass across all accounts
+        let cutoff = Date.now.addingTimeInterval(-14 * 86_400)
+        // Old activity means it isn't new to you, just new to us (a team the token couldn't read before).
+        let new = fetched.filter { !known!.contains($0.id) && ($0.lastActive ?? .distantFuture) > cutoff }
+        known!.formUnion(fetched.filter { ($0.lastActive ?? .distantFuture) <= cutoff }.map(\.id))
+        guard account.provider == .github else {
+            known!.formUnion(new.map(\.id))
+            selected.formUnion(new.map(\.id))
+            return fetched
+        }
+        let unpolled = new.filter { $0.latest.isEmpty }
+        let polled = unpolled.isEmpty ? [] : (try? await client
+            .projects(account: account, teams: Set(unpolled.map(\.teamID)), discover: false).projects) ?? []
+        var withRuns = Dictionary(polled.filter { !$0.latest.isEmpty }.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        for p in new where !p.latest.isEmpty { withRuns[p.id] = p }
+        known!.formUnion(withRuns.keys)
+        selected.formUnion(withRuns.keys)
+        return fetched.map { p in
+            guard var runs = withRuns[p.id] else { return p }
+            runs.activity = p.activity // the stub used for polling has no pushed_at
+            return runs
+        }
     }
 
     private static func unreachableMessage(_ teams: [TeamRef]) -> String? {
@@ -232,6 +312,7 @@ final class Store {
             .sorted { ($0.lastActive ?? .distantPast) > ($1.lastActive ?? .distantPast) }
         // A GitHub token can see hundreds of repos, most without Actions; start with the 10 busiest.
         selected.formUnion(recent.prefix(provider == .github ? 10 : .max).map(\.id))
+        known?.formUnion(fetched.map(\.id)) // the 14-day picks above are its first pass; the rest stay as you leave them
         projects += fetched.filter { p in !projects.contains { $0.id == p.id } }
         updateWobble()
         if provider == .github { // discovery has no runs; fetch them for the picks with a real (non-quick) pass

@@ -8,7 +8,7 @@ struct MenuView: View {
         let order = ["Failed", "In progress", "Today", "This week", "Earlier"]
         let groups = Dictionary(grouping: store.rows) { d -> String in
             switch d.state {
-            case .failed: "Failed"
+            case .failed where d.isRecentFailure: "Failed" // older failures sort by date with the rest
             case .building: "In progress"
             default:
                 Calendar.current.isDateInToday(d.createdAt) ? "Today"
@@ -144,13 +144,15 @@ struct MenuView: View {
 /// Row status mark. Ready is a quiet dot (most rows are ready); trouble and progress get the weight.
 struct StatusIcon: View {
     let state: DeployState
+    /// A failure from more than a week ago: still marked, but muted.
+    var stale = false
 
     var body: some View {
         Group {
             switch state {
             case .building: ProgressView().controlSize(.mini)
             case .ready: Circle().fill(.green).frame(width: 7, height: 7)
-            case .failed: Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red)
+            case .failed: Image(systemName: "exclamationmark.circle.fill").foregroundStyle(stale ? AnyShapeStyle(.secondary) : AnyShapeStyle(.red))
             case .canceled: Circle().strokeBorder(.secondary, lineWidth: 1.5).frame(width: 7, height: 7)
             }
         }
@@ -203,7 +205,7 @@ struct DeployRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            StatusIcon(state: deploy.state)
+            StatusIcon(state: deploy.state, stale: deploy.state == .failed && !deploy.isRecentFailure)
                 .padding(.top, 1) // optical: centers on the project name's line
 
             VStack(alignment: .leading, spacing: 2) {
@@ -227,7 +229,7 @@ struct DeployRow: View {
                             Text(fresh ? "just shipped" : deploy.createdAt.shortAgo(at: context.date))
                                 .font(.caption)
                                 .foregroundStyle(fresh ? AnyShapeStyle(DeployState.ready.color)
-                                    : deploy.state == .failed ? AnyShapeStyle(DeployState.failed.color) : AnyShapeStyle(.secondary))
+                                    : deploy.isRecentFailure ? AnyShapeStyle(DeployState.failed.color) : AnyShapeStyle(.secondary))
                                 .monospacedDigit()
                         }
                     }

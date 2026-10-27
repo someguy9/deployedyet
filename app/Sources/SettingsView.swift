@@ -420,6 +420,32 @@ private struct GeneralPane: View {
                     Text("Track preview deploys")
                     Text("Turn off if your repos build previews all day. Right-click a project for production only.")
                 }
+                Toggle(isOn: Binding(
+                    get: { store.watchPushes },
+                    set: { on in
+                        if on, store.pushFolder == nil { // first time: ask where the repos live
+                            guard let folder = chooseFolder() else { return }
+                            store.pushFolder = folder
+                        }
+                        store.watchPushes = on
+                    }
+                )) {
+                    Text("Check right after I push")
+                    Text("Watches a folder of your git repos, then checks every 5 seconds for a minute after a push. It only reads git’s push log there, and nothing leaves your Mac.")
+                }
+                if store.watchPushes, let folder = store.pushFolder {
+                    LabeledContent("Repos folder") {
+                        HStack(spacing: 8) {
+                            Text((folder as NSString).abbreviatingWithTildeInPath)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            Button("Change…") {
+                                if let folder = chooseFolder() { store.pushFolder = folder }
+                            }
+                        }
+                    }
+                }
             }
 
             Section("Notify me when") {
@@ -456,6 +482,17 @@ private struct GeneralPane: View {
         }
         .formStyle(.grouped)
         .navigationTitle("General")
+    }
+
+    private func chooseFolder() -> String? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Watch"
+        panel.message = "Pick the folder your git repos live in, like ~/Code."
+        panel.directoryURL = FileManager.default.homeDirectoryForCurrentUser
+        return panel.runModal() == .OK ? panel.url?.path : nil
     }
 }
 

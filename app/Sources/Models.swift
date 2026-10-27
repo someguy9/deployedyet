@@ -175,6 +175,11 @@ enum DeployState: Int, Comparable, Codable {
     }
 }
 
+extension Deploy {
+    /// A failure worth a red icon. One from weeks ago, on a project you've moved on from, is history, not news.
+    var isRecentFailure: Bool { state == .failed && Date.now.timeIntervalSince(createdAt) < 7 * 86_400 }
+}
+
 struct Deploy: Identifiable, Hashable, Codable {
     let id: String
     let provider: Provider
