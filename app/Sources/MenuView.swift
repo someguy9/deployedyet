@@ -46,7 +46,9 @@ struct MenuView: View {
                                     .padding(.bottom, 2)
                                     .accessibilityAddTraits(.isHeader)
                             }
-                            ForEach(section.rows) { DeployRow(deploy: $0, showTeam: showTeam, showProvider: showProvider) }
+                            // Keyed by the whole deploy, not its id: a row that went building → ready while the menu sat
+                            // open (or hidden) was being reused as-is, spinner and all.
+                            ForEach(section.rows, id: \.self) { DeployRow(deploy: $0, showTeam: showTeam, showProvider: showProvider) }
                         }
                     }
                     .padding(.horizontal, 4)
