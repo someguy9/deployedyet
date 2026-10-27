@@ -11,9 +11,9 @@ const logos = { vercel, cloudflare, githubactions };
 const [, ...details] = features;
 
 const tour = [
-  { head: "What needs you comes first", body: "Failed, then in progress, then today, this week and earlier." },
-  { head: "Every row says where it came from", body: "Branch, short commit and build time, from all your accounts." },
-  { head: "One click to the deploy", body: "Or right-click to open the site, copy its URL or keep it to production." },
+  { head: "Broken stuff goes to the top", body: "Failed deploys first, then anything still building, then the rest by date." },
+  { head: "Each row shows where it came from", body: "You get the branch, the short commit and how long it took to build." },
+  { head: "Click a row to open the deploy", body: "Right-click it to open the site or copy its URL. You can also stop tracking its previews from there." },
 ];
 
 // The hero ticker: three deploys, one per provider, playing the app's whole story.
@@ -77,7 +77,7 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
 
         <h1 class="display rise relative max-w-[13ch] text-[3rem] md:text-[5.5rem]">Your menu bar knows if it shipped.</h1>
         <p class="lede rise relative mt-6 max-w-[34rem] text-balance text-[1.0625rem] md:text-xl" style="animation-delay: 60ms;">
-          Building, live or failed, across every Vercel, Cloudflare and GitHub account.
+          One little icon that watches your Vercel, Cloudflare and GitHub deploys.
         </p>
         <div class="rise relative mt-9 flex flex-col items-center gap-4" style="animation-delay: 120ms;">
           <a href={DOWNLOAD_URL} class="btn-primary h-14 px-7 text-base">
@@ -95,11 +95,11 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
     <!-- The real app -->
     <section id="tour" class="wrap py-16 md:py-24" aria-labelledby="tour-title">
       <div class="grid items-center gap-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-16">
-        <div class="relative mx-auto w-full max-w-[380px]">
+        <div class="lit-menu relative mx-auto w-full max-w-[380px]">
           <MenuMock label="The Deployed Yet? menu, open under its checkmark in the Mac menu bar: “Yep. All deployed.” above deploys grouped into Today, This week and Earlier, each with branch, commit and build time." />
         </div>
         <div>
-          <h2 id="tour-title" class="title max-w-md">The whole app is one menu.</h2>
+          <h2 id="tour-title" class="title max-w-md">The whole app fits in one menu.</h2>
           <dl class="mt-8 space-y-6">
             {tour.map((t) => (
               <div class="border-l border-[var(--color-rule-strong)] pl-5">
@@ -116,10 +116,10 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
     <section id="providers" class="wrap py-16 md:py-24" aria-labelledby="providers-title">
       <div class="grid gap-10 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:gap-14">
         <div>
-          <h2 id="providers-title" class="title">Every account you deploy from.</h2>
-          <p class="lead mt-5 max-w-sm">Add every token you have. <span>Vercel teams, Cloudflare accounts and GitHub repos land in one list.</span></p>
+          <h2 id="providers-title" class="title">Add as many accounts as you want.</h2>
+          <p class="lead mt-5 max-w-sm">Add a token for each one. <span>Vercel teams, Cloudflare accounts and GitHub repos all end up in the same list.</span></p>
         </div>
-        <ul class="card divide-y divide-[var(--border)]">
+        <ul class="lit-card card divide-y divide-[var(--border)]">
           {providers.map((p) => (
             <li class="flex gap-4 p-5 md:p-6">
               <span class="logo-tile" style={`color: ${p.tint === "currentColor" ? "var(--foreground)" : p.tint};`} set:html={logos[p.id]} />
@@ -138,7 +138,7 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
     <section class="wrap py-16 md:py-24" aria-labelledby="details">
       <h2 id="details" class="title max-w-2xl">The stuff you’d open the dashboard for.</h2>
       <div class="mt-10 grid gap-4 lg:grid-cols-3">
-        <figure class="card overflow-hidden p-2 lg:col-span-2 lg:row-span-2">
+        <figure class="lit-window card overflow-hidden p-2 lg:col-span-2 lg:row-span-2">
           <SettingsMock label="Deployed Yet? Settings: an accounts sidebar and a Vercel team’s projects with a toggle for each." />
         </figure>
         {details.map((f) => (
@@ -154,7 +154,7 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
     <section id="install" class="wrap py-16 md:py-24" aria-labelledby="install-title">
       <div class="card relative overflow-hidden rounded-[32px] px-5 py-12 text-center md:px-12 md:py-24">
         <div class="relative mx-auto flex max-w-xl flex-col items-center">
-          <h2 id="install-title" class="display text-[2.5rem] md:text-[3.75rem]">Stop refreshing the dashboard.</h2>
+          <h2 id="install-title" class="display text-[2.5rem] md:text-[3.75rem]">Go close that dashboard tab.</h2>
           <div class="tabs mt-8 w-full" data-tabs>
             <div class="tablist" role="tablist" aria-label="Ways to install">
               <button role="tab" id="tab-dmg" aria-controls="panel-dmg" type="button">Download</button>
@@ -163,11 +163,11 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
             <div class="mt-4">
               <div role="tabpanel" id="panel-dmg" aria-labelledby="tab-dmg" class="panel">
                 <a href={DOWNLOAD_URL} class="btn-primary h-12 px-6">Download for Mac</a>
-                <p class="text-sm text-muted-foreground">macOS 14 or later. One app, no installer.</p>
+                <p class="text-sm text-muted-foreground">Needs macOS 14 or later. Drag it to Applications and you’re done.</p>
               </div>
               <div role="tabpanel" id="panel-src" aria-labelledby="tab-src" class="panel">
                 <button type="button" class="command" data-copy={clone} aria-label="Copy the build-from-source command"><span data-copy-label>{clone}</span></button>
-                <p class="text-sm text-muted-foreground">Needs Xcode and Tuist. MIT licensed.</p>
+                <p class="text-sm text-muted-foreground">You’ll need Xcode and Tuist. It’s MIT licensed.</p>
               </div>
             </div>
           </div>
@@ -179,8 +179,8 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
     <section id="faq" class="wrap py-16 md:py-24" aria-labelledby="faq-title">
       <div class="grid gap-10 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:gap-14">
         <div>
-          <h2 id="faq-title" class="title">Questions.</h2>
-          <p class="mt-4 max-w-xs text-muted-foreground">Something else? <a href={`${REPO_URL}/issues`} class="link-inline">Open an issue</a> and I’ll answer it there.</p>
+          <h2 id="faq-title" class="title">Things people ask.</h2>
+          <p class="mt-4 max-w-xs text-muted-foreground">Didn’t see yours? <a href={`${REPO_URL}/issues`} class="link-inline">Open an issue on GitHub</a> and I’ll answer it there.</p>
         </div>
         <div class="card divide-y divide-[var(--border)]">
           {faqs.map((f) => (

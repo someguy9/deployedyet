@@ -20,24 +20,24 @@ export const providers: Provider[] = [
     id: "vercel",
     name: "Vercel",
     tint: "currentColor",
-    tracks: "Production and preview deploys for every team, with branch, commit and build time.",
-    token: "Create a token scoped to one team with an expiration. Vercel tokens can’t be read-only yet; the app only ever reads.",
+    tracks: "Production and preview deploys for each team, with the branch, commit and how long the build took.",
+    token: "Make one per team and give it an expiry date. Vercel doesn’t do read-only tokens yet, but the app never writes anything.",
     tokenUrl: "https://vercel.com/account/tokens",
   },
   {
     id: "cloudflare",
     name: "Cloudflare",
     tint: "#F38020",
-    tracks: "Workers and Pages across every account. wrangler deploys show up as “just shipped”.",
-    token: "A custom token with Account Settings, Workers Scripts and Cloudflare Pages, all Read.",
+    tracks: "Workers and Pages on every account the token can see. A plain wrangler deploy shows up as “just shipped”, since there’s no build to watch.",
+    token: "A custom token with Read access to Account Settings, Workers Scripts and Cloudflare Pages.",
     tokenUrl: "https://dash.cloudflare.com/profile/api-tokens",
   },
   {
     id: "githubactions",
     name: "GitHub Actions",
     tint: "#2088FF",
-    tracks: "Workflow runs grouped by commit, so CI + Deploy on one push is one row. Cron and bot runs are ignored.",
-    token: "A fine-grained token with Actions and Metadata, both Read, on the repos you deploy from.",
+    tracks: "Runs are grouped by commit, so your CI and deploy workflows from one push show up as one row. Cron jobs and bot runs don’t count.",
+    token: "A fine-grained token with Read access to Actions and Metadata on the repos you deploy from.",
     tokenUrl: "https://github.com/settings/personal-access-tokens/new",
   },
 ];
@@ -53,54 +53,54 @@ export const features: Feature[] = [
   },
   {
     tag: "Details",
-    title: "Watch one build.",
-    body: "Building rows count up live. Click the bell on one and you hear about it the second it finishes, whatever your other settings.",
+    title: "Keep an eye on one build",
+    body: "Building rows show a live timer. Click the bell on one and you’ll get a notification when it’s done, even if you’ve turned the others off.",
   },
   {
     tag: "Focus",
-    title: "Previews, or production only.",
-    body: "Track preview builds by default, or right-click a busy repo and keep it to production.",
+    title: "Skip the preview noise",
+    body: "Previews are tracked by default. If one repo builds previews all day, right-click it and keep it to production.",
   },
   {
     tag: "Quiet",
-    title: "Hides until it matters.",
-    body: "Optionally show the icon only while something is building or broken. Out of the way the rest of the time.",
+    title: "Hide it when nothing’s happening",
+    body: "Set the icon to show up only while something is building or broken, and it stays out of your menu bar otherwise.",
   },
   {
     tag: "Private",
-    title: "No server. No account.",
-    body: "Tokens live in your Mac’s Keychain and only go to each provider’s own API. The code is open source, so you can check.",
+    title: "Your tokens stay on your Mac",
+    body: "They’re stored in the Keychain and only ever sent to Vercel, Cloudflare or GitHub. There’s no server of mine in the middle, and you can read the code to check.",
   },
   {
     tag: "Polite",
-    title: "Fast without hammering APIs.",
-    body: "Polls every 5s only while something builds, backs off when rate limited, refreshes after your Mac wakes.",
+    title: "Easy on your API limits",
+    body: "It checks every 5 seconds while something’s building and once a minute otherwise. If it gets rate limited it backs off, and it catches up when your Mac wakes.",
   },
 ];
 
 export const faqs: { q: string; a: string }[] = [
   {
     q: "Is it free?",
-    a: "Yes. Free and open source under the MIT license. If it saves you some dashboard refreshing, you can buy me a coffee.",
+    a: "Yes, and the code is MIT licensed. If it saves you a few dashboard refreshes, you can buy me a coffee.",
   },
   {
     q: "Which Macs does it run on?",
-    a: "macOS 14 Sonoma or later.",
+    a: "Any Mac on macOS 14 Sonoma or later, Apple Silicon or Intel.",
   },
   {
     q: "Where do my tokens go?",
-    a: "Into your Mac’s Keychain, and nowhere else. The app talks directly to api.vercel.com, api.cloudflare.com and api.github.com. There’s no Deployed Yet? server, and no analytics in the app.",
+    a: "Into your Mac’s Keychain. The app sends each one only to its own provider (api.vercel.com, api.cloudflare.com or api.github.com), and there’s no Deployed Yet? server or analytics in between.",
   },
   {
     q: "Why does Vercel need a full-access token?",
-    a: "Vercel tokens can only be narrowed to a team or project, not made read-only. Scope yours to one team and give it an expiration. Read-only “Sign in with Vercel” is coming once Vercel opens it up.",
+    a: "Vercel lets you limit a token to one team or project, but it has no read-only option yet. Scope yours to a single team and set an expiry date. If Vercel ever adds read-only access, I’ll switch to it.",
   },
   {
     q: "Why do some Workers say “deployed” but never “building”?",
-    a: "A plain wrangler deploy has no build phase Cloudflare can report. Those Workers show when they shipped, with a “just shipped” flash for the first two minutes.",
+    a: "When you run wrangler deploy yourself, there’s no build for Cloudflare to report, so the app only sees when it went live. Those Workers say “just shipped” for the first two minutes instead.",
   },
   {
     q: "I hid the icon. How do I get back to Settings?",
-    a: "Open Deployed Yet? again from Spotlight or Finder. Settings opens right up.",
+    a: "Open Deployed Yet? again from Spotlight or Finder and Settings pops up.",
   },
 ];

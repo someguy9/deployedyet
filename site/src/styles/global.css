@@ -279,6 +279,44 @@ html:not(.js) .ticker .deploy[data-state="failed"] .status-failed { display: inl
 }
 .logo-tile svg { width: 1.25rem; height: 1.25rem; }
 
+/* ---------- Product light: slight, static, and always from the product's own states ---------- */
+/* The menu bar's ✓ spills a little green down past the menu's edges. */
+.lit-menu { isolation: isolate; }
+.lit-menu::before {
+  content: ""; position: absolute; z-index: -1; inset: -20% -30% -12%; pointer-events: none;
+  background:
+    radial-gradient(28% 13% at 63% 15%, color-mix(in oklch, var(--color-ship) 34%, transparent), transparent 80%),
+    radial-gradient(34% 46% at 78% 44%, color-mix(in oklch, var(--color-ship) 8%, transparent), transparent 76%),
+    radial-gradient(42% 32% at 24% 86%, color-mix(in oklch, var(--color-ship) 7%, transparent), transparent 76%);
+}
+/* Providers: light catches the card's top-right edge, and each logo glows faintly in its own colour. */
+.lit-card { position: relative; } /* no isolation: its glow stays behind the card, peeking past the corner */
+.lit-card::before {
+  content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(225deg, color-mix(in oklch, var(--color-ink) 24%, transparent), transparent 38%);
+  -webkit-mask: linear-gradient(var(--color-ink) 0 0) content-box, linear-gradient(var(--color-ink) 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; /* leaves only the 1px border ring */
+}
+.lit-card::after {
+  content: ""; position: absolute; z-index: -1; top: -4.5rem; right: -4.5rem; width: 60%; height: 65%; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in oklch, var(--color-ship) 20%, transparent), transparent);
+}
+.lit-card .logo-tile { box-shadow: 0 0 1.75rem -0.5rem color-mix(in oklch, currentColor 45%, transparent); }
+/* Settings: a prism along the top edge (the deploy colours, amber to white to green), and a green spill off the corner. */
+.lit-window { position: relative; box-shadow: inset 0 0 0 1px var(--color-rule), -2.5rem 3rem 5.5rem -3rem color-mix(in oklch, var(--color-ship) 38%, transparent); }
+.lit-window::before {
+  content: ""; position: absolute; z-index: 1; top: 0; left: 14%; right: 32%; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent,
+    color-mix(in oklch, var(--color-build) 75%, transparent) 26%,
+    color-mix(in oklch, var(--color-ink) 90%, transparent) 50%,
+    color-mix(in oklch, var(--color-ship) 75%, transparent) 74%, transparent);
+  box-shadow: 0 0 0.75rem 0.05rem color-mix(in oklch, var(--color-ink) 16%, transparent);
+}
+.lit-window::after { /* the light that line lets in */
+  content: ""; position: absolute; z-index: 1; top: 0; left: 10%; right: 28%; height: 5rem; pointer-events: none;
+  background: radial-gradient(50% 100% at 50% 0, color-mix(in oklch, var(--color-ink) 5%, transparent), transparent);
+}
+
 /* ---------- Install ---------- */
 
 .tablist {

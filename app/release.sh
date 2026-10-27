@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the public release: a universal (Apple Silicon + Intel) app signed with Developer ID, in a classic
-# drag-to-Applications DMG, notarized by Apple and stapled. Output: app/build/DeployedYet.dmg
+# drag-to-Applications DMG, notarized by Apple and stapled. Output: app/build/release/DeployedYet.dmg
 #
 #   app/release.sh                # the real thing
 #   app/release.sh --no-notarize  # everything but Apple's check, for trying it out
@@ -16,7 +16,7 @@ TEAM=WX67M3Z25T
 IDENTITY="Developer ID Application"
 PROFILE=deployedyet # notarytool keychain profile
 VOLUME="Deployed Yet?"
-OUT=build
+OUT=build/release # its own folder: clearing it never touches the Debug build in build/debug
 APP=$OUT/DerivedData/Build/Products/Release/DeployedYet.app
 DMG=$OUT/DeployedYet.dmg # same name every release, so releases/latest/download/DeployedYet.dmg always works
 NOTARIZE=1
