@@ -1,0 +1,28 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import { REPO_URL } from "~/lib/site";
+
+const points = [
+  { head: "The app collects nothing.", body: "No account, no analytics, no crash reporting, no server of ours to send anything to." },
+  { head: "Your tokens stay in your Keychain.", body: "Stored on this Mac only, and sent only to the provider they belong to: api.vercel.com, api.cloudflare.com or api.github.com." },
+  { head: "Deploy details are cached locally.", body: "Project names, branches and commit messages are kept on your Mac so the menu fills in instantly. Removing an account deletes its token." },
+  { head: "This website counts visits, not people.", body: "Simple Analytics counts page views without cookies or personal data." },
+];
+---
+
+<Layout title="Privacy | Deployed Yet?" description="What Deployed Yet? does with your data: nothing leaves your Mac except calls to the deploy providers you connect.">
+  <main id="main" class="wrap max-w-2xl py-20">
+    <a href="/" class="link text-sm text-muted-foreground">Back to Deployed Yet?</a>
+    <h1 class="title mt-6">Privacy</h1>
+    <p class="mt-4 text-lg text-muted-foreground">Nothing leaves your Mac except calls to the providers you connect.</p>
+    <dl class="mt-12 space-y-8">
+      {points.map((p) => (
+        <div class="border-l border-[var(--color-rule-strong)] pl-5">
+          <dt class="font-semibold">{p.head}</dt>
+          <dd class="mt-1 text-muted-foreground">{p.body}</dd>
+        </div>
+      ))}
+    </dl>
+    <p class="mt-12 text-muted-foreground">The code is open source, so you can check all of this on <a href={REPO_URL} class="link-inline">GitHub</a>.</p>
+  </main>
+</Layout>

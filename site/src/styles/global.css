@@ -1,0 +1,374 @@
+/* Hallmark v2.0.0 · theme: custom · idea: "a deploy light: the hero's glow shifts from building amber to shipped green, the menu bar's answer as atmosphere" · vibe: "dark, exact, one warm sprinkle of play" · paper: near-black (t3.codes and vercel.com lineage, by request) · accent: white for action, amber and green only as deploy states · faces: Inter Variable, system mono for commands · hero: centred claim among floating provider tiles over a vgpu WebGPU light shader, the real menu screenshot below · signature: the backdrop's light changing colour as a deploy lands · posture: dark/grotesk-medium/neutral · modes: dark · genre: modern-minimal */
+/* critique: near-black with a coloured glow is a spent default; kept because the user asked for t3.codes' look, earned by the glow's colour carrying the app's real states and the real product screenshot carrying the page. */
+/* answered F7: pill radius on the tablist and nav is on controls; the focus ring follows the control it sits on. */
+/* waive 47a, 63: MenuMock and SettingsMock rebuild the app's own UI from its SwiftUI source, by request ("make it look exactly like the app"); the title bar and the · separators are the app's real chrome and copy. */
+/* waive 29: translucent nav is the Apple material the user asked for (apple-design § 12); solid under prefers-reduced-transparency. */
+@import "tailwindcss";
+
+/* ---------- Tokens: every colour and face on the page comes from here ---------- */
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+:root {
+  --color-paper: oklch(0.155 0.006 265);
+  --color-paper-2: oklch(0.195 0.007 265);
+  --color-paper-3: oklch(0.235 0.008 265);
+  --color-ink: oklch(0.97 0.003 265);
+  --color-ink-2: oklch(0.72 0.008 265);
+  --color-ink-3: oklch(0.56 0.008 265);
+  --color-rule: oklch(1 0 0 / 0.08);
+  --color-rule-strong: oklch(1 0 0 / 0.14);
+  --color-grid: oklch(1 0 0 / 0.035);
+  --color-ship: oklch(0.76 0.15 150);      /* the ✓ */
+  --color-ship-soft: oklch(0.76 0.15 150 / 0.14);
+  --color-build: oklch(0.80 0.14 75);      /* the ? */
+  --color-build-soft: oklch(0.80 0.14 75 / 0.14);
+  --color-fail: oklch(0.70 0.18 25);       /* the ! */
+  --color-fail-soft: oklch(0.70 0.18 25 / 0.14);
+  --color-action: oklch(0.97 0.003 265);   /* white primary button, like t3.codes */
+  --color-on-action: oklch(0.17 0.006 265);
+  --color-focus: oklch(0.80 0.12 230);
+  --color-tile: oklch(0.21 0.007 265);
+  --color-tile-edge: oklch(1 0 0 / 0.09);
+  --color-nav: oklch(0.155 0.006 265 / 0.72);
+  --color-shadow: oklch(0 0 0 / 0.5);
+  /* The app itself, rebuilt in HTML (MenuMock, SettingsMock): macOS dark system colours and the system face. */
+  --font-mac: -apple-system, BlinkMacSystemFont, "Inter Variable", system-ui, sans-serif;
+  --color-mac-panel: oklch(0.265 0.004 265 / 0.97);
+  --color-mac-window: oklch(0.255 0 0);
+  --color-mac-sidebar: oklch(0.225 0.003 265);
+  --color-mac-group: oklch(1 0 0 / 0.05);
+  --color-mac-hairline: oklch(1 0 0 / 0.09);
+  --color-mac-edge: oklch(1 0 0 / 0.13);
+  --color-mac-select: oklch(1 0 0 / 0.1);
+  --color-mac-fill: oklch(1 0 0 / 0.14);
+  --color-mac-label: oklch(1 0 0 / 0.88);
+  --color-mac-label-2: oklch(1 0 0 / 0.55);
+  --color-mac-label-3: oklch(1 0 0 / 0.34);
+  --color-mac-green: oklch(0.76 0.2 145);   /* systemGreen */
+  --color-mac-green-soft: oklch(0.76 0.2 145 / 0.16);
+  --color-mac-blue: oklch(0.62 0.2 256);    /* controlAccent */
+  --color-mac-knob: oklch(0.95 0 0);
+  --color-mac-close: oklch(0.67 0.2 27);
+  --color-lede: oklch(0.85 0.005 265); /* the hero sentence: neutral and bright enough not to go green over the glow */
+  --color-mac-bar: oklch(0.2 0.004 265 / 0.85);
+  --color-mac-bar-active: oklch(1 0 0 / 0.2);
+  --color-mac-bar-ink: oklch(1 0 0 / 0.92);
+
+  --shadow-tile: inset 0 1px 0 var(--color-tile-edge), 0 0 0 1px var(--color-rule), 0 18px 40px -12px var(--color-shadow);
+  --shadow-shot: 0 0 0 1px var(--color-rule-strong), 0 40px 100px -30px var(--color-shadow);
+
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --card: var(--color-paper-2);
+  --muted-foreground: var(--color-ink-2);
+  --border: var(--color-rule);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted-foreground: var(--muted-foreground);
+}
+
+/* ---------- Base ---------- */
+
+html, body { overflow-x: clip; }
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 380; /* light-on-dark reads heavier; take a little off */
+  line-height: 1.55;
+  font-feature-settings: "cv11", "ss01";
+}
+:where(a, button, summary):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: 12px;
+  transition: none;
+}
+summary::-webkit-details-marker { display: none; }
+
+.wrap { width: min(100% - 2.5rem, 72rem); margin-inline: auto; }
+
+/* Tight and medium, after t3.codes and vercel.com: large, close-set, never shouting. */
+.display {
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+.title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+/* Two-tone lead: the claim in ink, its detail muted. */
+.lead { font-size: 1.25rem; line-height: 1.4; letter-spacing: -0.015em; color: var(--color-ink); text-wrap: pretty; }
+.lead span { color: var(--color-ink-3); }
+
+/* ---------- Nav ---------- */
+
+.nav > div {
+  background: var(--color-nav);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: inset 0 0 0 1px var(--color-rule);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .nav > div { background: var(--color-paper-2); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+/* ---------- Hero ---------- */
+
+/* The nav floats over the page (fixed), so the hero and its light run all the way to the top, under it. */
+html { scroll-padding-top: 6rem; } /* section links stop below the floating nav */
+.hero { position: relative; isolation: isolate; }
+/* Faint grid, fading out from the centre, under everything. */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image:
+    linear-gradient(var(--color-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: center top;
+  -webkit-mask-image: radial-gradient(70% 70% at 50% 35%, var(--color-ink), transparent);
+  mask-image: radial-gradient(70% 70% at 50% 35%, var(--color-ink), transparent);
+}
+/* The vgpu light. Transparent canvas, the page shows through where there is no light. */
+/* The nav mark is the app's own answer chip (the menu header's ✓), not the app icon shrunk to 32px. */
+.brand-mark { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--color-ship-soft); color: var(--color-ship); }
+.brand-mark svg { width: 0.95rem; height: 0.95rem; }
+.lede { color: var(--color-lede); font-weight: 450; line-height: 1.45; }
+.hero-light {
+  position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none;
+  /* the glow dissolves into the page instead of stopping at the hero's bottom edge */
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent);
+  mask-image: linear-gradient(to bottom, black 60%, transparent);
+}
+
+/* Deploy ticker (motion after Emil Kowalski): cards share one grid cell; transitions, not keyframes,
+   so every state change is interruptible. Text swaps blur through; nothing scales from zero. */
+.ticker {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr); /* lets the one-line meta shrink instead of widening the card */
+  gap: 0.5rem; /* without JS: a plain list of three finished deploys */
+  width: min(100%, 25rem);
+  margin-inline: auto; /* inline only, so the markup's mb-10 (a layered utility) still applies */
+}
+.deploy {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 0.95rem 1rem;
+  border-radius: 16px;
+  background: var(--color-tile);
+  box-shadow: var(--shadow-tile);
+  text-align: left;
+  transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out), filter 420ms var(--ease-out);
+}
+/* With JS (html.js): one stack, one card at a time. */
+.js .ticker { gap: 0; }
+.js .ticker .deploy { grid-area: 1 / 1; }
+.js .ticker .deploy[data-pos="after"] { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(4px); }
+.js .ticker .deploy[data-pos="before"] { opacity: 0; transform: translateY(-12px) scale(0.98); filter: blur(4px); }
+.deploy .logo-tile { width: 2.5rem; height: 2.5rem; border-radius: 11px; }
+.deploy-main { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 0.1rem; }
+.deploy-project { font-weight: 550; letter-spacing: -0.01em; }
+.deploy-meta {
+  display: flex;
+  min-width: 0;
+  gap: 0 0.6rem;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--color-ink-3);
+  /* One line always; if a long branch runs out of room the end fades instead of wrapping. */
+  -webkit-mask-image: linear-gradient(to right, var(--color-ink) 85%, transparent);
+  mask-image: linear-gradient(to right, var(--color-ink) 85%, transparent);
+}
+
+.deploy-status { display: grid; justify-items: end; font-size: 0.8125rem; font-weight: 550; white-space: nowrap; }
+.status {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: opacity 260ms var(--ease-out), transform 260ms var(--ease-out), filter 260ms var(--ease-out);
+}
+/* Without JS each card shows only its final result. */
+html:not(.js) .ticker .status { display: none; }
+html:not(.js) .ticker .deploy[data-state="live"] .status-live,
+html:not(.js) .ticker .deploy[data-state="failed"] .status-failed { display: inline-flex; }
+.js .ticker .status { opacity: 0; transform: translateY(4px); filter: blur(2px); }
+.status-building { color: var(--color-build); }
+.status-live { color: var(--color-ship); }
+.status-failed { color: var(--color-fail); }
+.js .ticker .deploy[data-state="building"] .status-building,
+.js .ticker .deploy[data-state="live"] .status-live,
+.js .ticker .deploy[data-state="failed"] .status-failed { opacity: 1; transform: none; filter: none; }
+
+.spinner {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-build-soft);
+  border-top-color: currentColor;
+  animation: spin 0.7s linear infinite; /* fast spin reads as fast build */
+}
+@keyframes spin { to { rotate: 1turn; } }
+
+/* Progress: linear while building (constant motion), snaps to full green or stops red. */
+.deploy-bar {
+  position: absolute;
+  inset: auto 0.95rem 0.45rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-rule);
+  overflow: hidden;
+}
+.deploy-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-build);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.deploy[data-pos="active"][data-state="building"] .deploy-bar::after { transform: scaleX(0.9); transition: transform var(--build, 3400ms) linear; }
+.deploy[data-state="live"] .deploy-bar::after { transform: scaleX(1); background: var(--color-ship); transition: transform 260ms var(--ease-out), background-color 260ms ease; }
+.deploy[data-state="failed"] .deploy-bar::after { transform: scaleX(0.9); background: var(--color-fail); transition: background-color 260ms ease; }
+
+/* The real app, rising out of the hero. */
+.shot { box-shadow: var(--shadow-shot); }
+
+/* ---------- Surfaces ---------- */
+
+.card {
+  background: var(--color-paper-2);
+  color: var(--color-ink);
+  border-radius: 20px;
+  box-shadow: inset 0 0 0 1px var(--color-rule);
+}
+
+.logo-tile {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  background: var(--color-paper-3);
+}
+.logo-tile svg { width: 1.25rem; height: 1.25rem; }
+
+/* ---------- Install ---------- */
+
+.tablist {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border-radius: 999px;
+  background: var(--color-paper-3);
+}
+.tablist [role="tab"] {
+  height: 2.25rem;
+  white-space: nowrap;
+  padding-inline: 1rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 550;
+  color: var(--color-ink-2);
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+.tablist [role="tab"]:hover { color: var(--color-ink); }
+.tablist [role="tab"][aria-selected="true"] { background: var(--color-ink); color: var(--color-paper); }
+.panel { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; min-height: 5.5rem; }
+.panel[hidden] { display: none; }
+.command {
+  max-width: 100%;
+  padding: 0.85rem 1.1rem;
+  border-radius: 14px;
+  background: var(--color-paper);
+  box-shadow: inset 0 0 0 1px var(--color-rule-strong);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+  transition: box-shadow 150ms ease-out, transform 120ms ease-out;
+}
+.command:hover { box-shadow: inset 0 0 0 1px var(--color-ink-3); }
+.command:active { transform: scale(0.98); transition-duration: 60ms; }
+
+/* ---------- The answers (404 page) ---------- */
+
+.big-glyph {
+  display: inline-grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 999px;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.tone-build { background: var(--color-build-soft); color: var(--color-build); }
+.tone-ship { background: var(--color-ship-soft); color: var(--color-ship); }
+.tone-fail { background: var(--color-fail-soft); color: var(--color-fail); }
+
+/* ---------- Controls: instant press feedback ---------- */
+
+.btn-primary, .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border-radius: 999px; /* pills, like the nav's Download */
+  font-weight: 550;
+  transition: transform 120ms ease-out, background-color 150ms ease-out, opacity 150ms ease-out;
+}
+.btn-primary { background: var(--color-action); color: var(--color-on-action); }
+.btn-primary:hover { opacity: 0.9; }
+.btn-secondary { background: var(--color-paper-2); color: var(--color-ink); box-shadow: inset 0 0 0 1px var(--color-rule-strong); }
+.btn-secondary:hover { background: var(--color-paper-3); }
+.btn-primary:active, .btn-secondary:active { transform: scale(0.97); transition-duration: 60ms; }
+.btn-primary:disabled, .btn-secondary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.link { transition: color 150ms ease-out; }
+.link:hover { color: var(--color-ink); }
+.link-inline { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-rule-strong); text-underline-offset: 3px; }
+.link-inline:hover { text-decoration-color: currentColor; }
+
+.faq .chev { transition: transform 200ms ease-out; }
+.faq[open] .chev { transform: rotate(180deg); }
+
+/* ---------- Entrance: once, never on scroll ---------- */
+
+/* Movement only: content is fully visible from the first frame, even if the animation never runs. */
+@keyframes rise-in { from { transform: translateY(10px); } to { transform: none; } }
+.rise { animation: rise-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  .deploy, .status { transform: none !important; filter: none !important; }
+  .deploy[data-pos="active"][data-state="building"] .deploy-bar::after { transition: none; }
+  .spinner { animation-duration: 2.4s; }
+  .btn-primary:active, .btn-secondary:active { transform: none; }
+}

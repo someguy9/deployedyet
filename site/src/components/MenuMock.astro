@@ -1,0 +1,143 @@
+---
+// The app's menu, rebuilt from MenuView.swift instead of a screenshot: same sizes in points (the menu is 380pt wide),
+// scaled to its container through --pt, so it stays sharp at any zoom and tracks the app when it changes.
+// Icons are Lucide (ISC) stand-ins for the SF Symbols the app uses.
+const sections = [
+  { title: "Today", rows: [
+    { name: "rightblogger", message: "Add bulk keyword research to the dashboard", branch: "main", sha: "cc11643", built: "3m 17s", when: "1h ago" },
+  ] },
+  { title: "This week", rows: [
+    { name: "baybridgestatus", message: "Show lane closures on the map", branch: "main", sha: "4e1b9d2", built: "41s", when: "2d ago" },
+    { name: "titlecapitalize", message: "Support AP and Chicago style headlines", branch: "main", sha: "a7c03f5", built: "28s", when: "4d ago" },
+    { name: "colorkit", message: "Faster palette generator", branch: "main", sha: "5e9aad1", built: "52s", when: "5d ago" },
+  ] },
+  { title: "Earlier", rows: [
+    { name: "videotoblog", message: "Clean up the homepage sections", branch: "redesign", sha: "6aeda2e", built: "54s", when: "1w ago" },
+    { name: "sunrisesunset", message: "API: add golden hour times", branch: "main", sha: "b0fd42a", built: "33s", when: "2w ago" },
+  ] },
+];
+const count = sections.reduce((n, s) => n + s.rows.length, 0);
+const { label } = Astro.props;
+---
+
+<div class="fit" role="img" aria-label={label}>
+  <!-- A slice of the Mac menu bar, so the panel reads as what it is: the app's ✓, pressed, with the menu dropped below it. -->
+  <div class="menubar">
+    <span class="item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+    <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.86a10 10 0 0 1 14 0"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/></svg></span>
+    <span class="item"><svg class="battery" viewBox="0 0 30 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="1" width="24" height="12" rx="3.5"/><rect x="3" y="3" width="15" height="8" rx="1.8" fill="currentColor" stroke="none"/><path d="M27.5 5v4" stroke-linecap="round"/></svg></span>
+    <span class="item clock" data-clock>Tue 9:41</span>
+  </div>
+  <div class="menu">
+    <div class="head">
+      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+      <div>
+        <p class="headline">Yep. All deployed.</p>
+        <p class="caption">{count} projects · last deploy 1 hour ago</p>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="list">
+      {sections.map((s) => (
+        <>
+          <p class="section">{s.title}</p>
+          {s.rows.map((r) => (
+            <div class="row">
+              <span class="mark"><span class="dot"></span></span>
+              <div class="text">
+                <p class="line"><span class="name">{r.name}</span><span class="when">{r.when}</span></p>
+                <p class="caption clip">{r.message}</p>
+                <p class="meta">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>
+                  <span>{r.branch}</span><span class="sha">{r.sha}</span><span>· built in {r.built}</span>
+                </p>
+              </div>
+            </div>
+          ))}
+        </>
+      ))}
+    </div>
+    <div class="foot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+      <span class="updated">Updated 15s ago</span>
+      <svg class="push" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
+    </div>
+  </div>
+</div>
+
+<script>
+  // The bar's clock shows the visitor's own day and time, in their locale's menu bar style ("Tue 9:41 AM").
+  const format = new Intl.DateTimeFormat(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
+  for (const el of document.querySelectorAll<HTMLElement>("[data-clock]")) {
+    const tick = () => (el.textContent = format.format(new Date()));
+    tick();
+    setInterval(tick, 15_000);
+  }
+</script>
+
+<style>
+  .fit { --pt: calc(100cqw / 380); container-type: inline-size; width: 100%; font-family: var(--font-mac); }
+  .menubar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: calc(4 * var(--pt));
+    height: calc(24 * var(--pt));
+    padding: 0 calc(8 * var(--pt));
+    border-radius: calc(6 * var(--pt));
+    background: var(--color-mac-bar);
+    box-shadow: inset 0 -1px 0 var(--color-mac-hairline);
+    color: var(--color-mac-bar-ink);
+    font-size: calc(13 * var(--pt));
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+    /* a slice of a full-width bar, not a box: it fades in from the left */
+    -webkit-mask-image: linear-gradient(to right, transparent, black 45%);
+    mask-image: linear-gradient(to right, transparent, black 45%);
+  }
+  .item { display: grid; place-items: center; height: calc(20 * var(--pt)); padding: 0 calc(7 * var(--pt)); border-radius: calc(5 * var(--pt)); }
+  .item svg { width: calc(15 * var(--pt)); height: calc(15 * var(--pt)); }
+  .item .battery { width: calc(24 * var(--pt)); height: calc(11 * var(--pt)); }
+  .active { background: var(--color-mac-bar-active); }
+  .active svg { width: calc(13 * var(--pt)); height: calc(13 * var(--pt)); }
+  .clock { font-variant-numeric: tabular-nums; }
+  .menu {
+    margin-top: calc(6 * var(--pt));
+    overflow: hidden;
+    border-radius: calc(12 * var(--pt));
+    background: var(--color-mac-panel);
+    box-shadow: inset 0 0 0 1px var(--color-mac-edge), var(--shadow-shot);
+    color: var(--color-mac-label);
+    font-family: var(--font-mac);
+    font-size: calc(13 * var(--pt));
+    line-height: 1.25;
+    -webkit-font-smoothing: antialiased;
+  }
+  p { margin: 0; }
+  svg { flex: none; }
+  .head { display: flex; align-items: center; gap: calc(12 * var(--pt)); padding: calc(14 * var(--pt)) calc(14 * var(--pt)) calc(10 * var(--pt)); }
+  .badge { display: grid; place-items: center; width: calc(28 * var(--pt)); height: calc(28 * var(--pt)); border-radius: 50%; background: var(--color-mac-green-soft); color: var(--color-mac-green); }
+  .badge svg { width: calc(13 * var(--pt)); height: calc(13 * var(--pt)); }
+  .headline { font-weight: 700; }
+  .caption { margin-top: calc(2 * var(--pt)); font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); }
+  .divider { height: 1px; margin: 0 calc(14 * var(--pt)); background: var(--color-mac-hairline); }
+  .list { padding: 0 calc(4 * var(--pt)) calc(4 * var(--pt)); }
+  .section { padding: calc(10 * var(--pt)) calc(10 * var(--pt)) calc(2 * var(--pt)); font-size: calc(10.5 * var(--pt)); font-weight: 600; color: var(--color-mac-label-2); }
+  .row { display: flex; align-items: flex-start; gap: calc(10 * var(--pt)); padding: calc(7 * var(--pt)) calc(10 * var(--pt)); }
+  .mark { display: grid; place-items: center; width: calc(16 * var(--pt)); height: calc(16 * var(--pt)); }
+  .dot { width: calc(7 * var(--pt)); height: calc(7 * var(--pt)); border-radius: 50%; background: var(--color-mac-green); }
+  .text { flex: 1; min-width: 0; }
+  .line { display: flex; align-items: baseline; justify-content: space-between; gap: calc(8 * var(--pt)); }
+  .name { font-weight: 500; }
+  .when { font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); font-variant-numeric: tabular-nums; }
+  .clip { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .meta { display: flex; align-items: center; gap: calc(4 * var(--pt)); margin-top: calc(2 * var(--pt)); font-size: calc(10 * var(--pt)); color: var(--color-mac-label-3); white-space: nowrap; }
+  .meta svg { width: calc(9 * var(--pt)); height: calc(9 * var(--pt)); }
+  .sha { font-family: var(--font-mono); }
+  .foot { display: flex; align-items: center; gap: calc(14 * var(--pt)); padding: calc(10 * var(--pt)) calc(14 * var(--pt)); border-top: 1px solid var(--color-mac-hairline); color: var(--color-mac-label-2); }
+  .foot svg { width: calc(14 * var(--pt)); height: calc(14 * var(--pt)); }
+  .updated { font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-3); }
+  .push { margin-left: auto; }
+</style>

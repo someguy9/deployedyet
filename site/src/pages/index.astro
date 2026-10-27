@@ -1,0 +1,222 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import { COFFEE_URL, DOWNLOAD_URL, REPO_URL, faqs, features, providers } from "~/lib/site";
+import vercel from "~/icons/vercel.svg?raw";
+import cloudflare from "~/icons/cloudflare.svg?raw";
+import githubactions from "~/icons/githubactions.svg?raw";
+import MenuMock from "~/components/MenuMock.astro";
+import SettingsMock from "~/components/SettingsMock.astro";
+
+const logos = { vercel, cloudflare, githubactions };
+const [, ...details] = features;
+
+const tour = [
+  { head: "What needs you comes first", body: "Failed, then in progress, then today, this week and earlier." },
+  { head: "Every row says where it came from", body: "Branch, short commit and build time, from all your accounts." },
+  { head: "One click to the deploy", body: "Or right-click to open the site, copy its URL or keep it to production." },
+];
+
+// The hero ticker: three deploys, one per provider, playing the app's whole story.
+const deploys = [
+  { provider: "vercel", project: "marketing-site", branch: "main", commit: "a41c9e2", end: "live", seconds: 31, result: "Live in 31s" },
+  { provider: "cloudflare", project: "edge-api", branch: "main", commit: "7f03b1d", end: "live", seconds: 19, result: "Live in 19s" },
+  { provider: "githubactions", project: "deploy.yml", branch: "checkout-v2", commit: "c93e5aa", end: "failed", seconds: 26, result: "Build failed" },
+] as const;
+
+const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/app/run-menubar.sh";
+---
+
+<Layout>
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-full focus:bg-card focus:px-4 focus:py-2">Skip to content</a>
+
+  <nav class="nav fixed inset-x-0 top-3 z-50 mx-auto w-[calc(100%-1.5rem)] max-w-5xl md:top-4">
+    <div class="flex items-center justify-between rounded-full py-1.5 pr-1.5 pl-2 md:py-2 md:pr-2">
+      <a href="/" class="flex items-center gap-2.5 rounded-full pr-2 font-semibold tracking-[-0.01em]">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        Deployed Yet?
+      </a>
+      <div class="flex items-center gap-1">
+        <a href="#tour" class="link hidden rounded-full px-3 py-1.5 text-sm text-muted-foreground md:inline-flex">The app</a>
+        <a href="#providers" class="link hidden rounded-full px-3 py-1.5 text-sm text-muted-foreground md:inline-flex">Providers</a>
+        <a href="#faq" class="link hidden rounded-full px-3 py-1.5 text-sm text-muted-foreground md:inline-flex">FAQ</a>
+        <a href="#install" class="btn-primary h-9 px-4 text-sm md:h-10 md:px-5">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- Hero, after t3.codes: a centred claim among floating tiles, over a vgpu deploy light. -->
+    <section class="hero">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <canvas class="hero-light" aria-hidden="true" data-light></canvas>
+      <div class="wrap relative flex min-h-svh flex-col items-center justify-center pt-36 pb-16 text-center md:min-h-[800px]">
+        <figure class="ticker rise mb-10" data-ticker aria-label="Example: deploys on Vercel and Cloudflare going live, and a GitHub Actions build failing">
+          {deploys.map((d, i) => {
+            const p = providers.find((x) => x.id === d.provider)!;
+            return (
+              <div class="deploy" data-deploy data-end={d.end} data-seconds={d.seconds} data-state={d.end} data-pos={i === 0 ? "active" : "after"}>
+                <span class="logo-tile" style={`color: ${p.tint === "currentColor" ? "var(--color-ink)" : p.tint};`} set:html={logos[d.provider]} />
+                <div class="deploy-main">
+                  <span class="deploy-project">{d.project}</span>
+                  <span class="deploy-meta">
+                    <span>{p.name}</span>
+                    <span>{d.branch}</span>
+                    <span class="font-mono">{d.commit}</span>
+                  </span>
+                </div>
+                <div class="deploy-status">
+                  <span class="status status-building"><span class="spinner" aria-hidden="true"></span>Building <span class="tabular" data-elapsed>0:00</span></span>
+                  <span class="status status-live"><svg aria-hidden="true" viewBox="0 0 16 16" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 8.5 3 3 6-7"/></svg>{d.result}</span>
+                  <span class="status status-failed"><svg aria-hidden="true" viewBox="0 0 16 16" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 3.5v5.5M8 12.2v.3"/></svg>{d.result}</span>
+                </div>
+                <span class="deploy-bar" aria-hidden="true"></span>
+              </div>
+            );
+          })}
+        </figure>
+
+        <h1 class="display rise relative max-w-[13ch] text-[3rem] md:text-[5.5rem]">Your menu bar knows if it shipped.</h1>
+        <p class="lede rise relative mt-6 max-w-[34rem] text-balance text-[1.0625rem] md:text-xl" style="animation-delay: 60ms;">
+          Building, live or failed, across every Vercel, Cloudflare and GitHub account.
+        </p>
+        <div class="rise relative mt-9 flex flex-col items-center gap-4" style="animation-delay: 120ms;">
+          <a href={DOWNLOAD_URL} class="btn-primary h-14 px-7 text-base">
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-[18px]" fill="currentColor"><path d="M16.37 12.37c-.03-2.5 2.04-3.7 2.13-3.76-1.16-1.7-2.97-1.93-3.61-1.96-1.54-.16-3 .9-3.78.9-.78 0-1.98-.88-3.26-.86-1.68.03-3.23.98-4.09 2.48-1.75 3.03-.45 7.5 1.25 9.96.83 1.2 1.82 2.55 3.12 2.5 1.25-.05 1.72-.81 3.23-.81s1.94.81 3.26.78c1.35-.02 2.2-1.22 3.02-2.43.95-1.39 1.34-2.74 1.36-2.81-.03-.01-2.6-1-2.63-3.99ZM13.9 5.03c.69-.84 1.16-2 1.03-3.16-1 .04-2.2.67-2.91 1.5-.64.74-1.2 1.92-1.05 3.06 1.11.09 2.24-.56 2.93-1.4Z"/></svg>
+            Download for macOS
+          </a>
+          <a href={REPO_URL} class="link -my-2.5 inline-flex items-center gap-2 py-2.5 text-[0.9375rem] text-muted-foreground">
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-4" fill="currentColor"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5Z"/></svg>
+            It’s open source. Read every line.
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- The real app -->
+    <section id="tour" class="wrap py-16 md:py-24" aria-labelledby="tour-title">
+      <div class="grid items-center gap-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-16">
+        <div class="relative mx-auto w-full max-w-[380px]">
+          <MenuMock label="The Deployed Yet? menu, open under its checkmark in the Mac menu bar: “Yep. All deployed.” above deploys grouped into Today, This week and Earlier, each with branch, commit and build time." />
+        </div>
+        <div>
+          <h2 id="tour-title" class="title max-w-md">The whole app is one menu.</h2>
+          <dl class="mt-8 space-y-6">
+            {tour.map((t) => (
+              <div class="border-l border-[var(--color-rule-strong)] pl-5">
+                <dt class="font-semibold">{t.head}</dt>
+                <dd class="mt-1 text-muted-foreground">{t.body}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- Providers -->
+    <section id="providers" class="wrap py-16 md:py-24" aria-labelledby="providers-title">
+      <div class="grid gap-10 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:gap-14">
+        <div>
+          <h2 id="providers-title" class="title">Every account you deploy from.</h2>
+          <p class="lead mt-5 max-w-sm">Add every token you have. <span>Vercel teams, Cloudflare accounts and GitHub repos land in one list.</span></p>
+        </div>
+        <ul class="card divide-y divide-[var(--border)]">
+          {providers.map((p) => (
+            <li class="flex gap-4 p-5 md:p-6">
+              <span class="logo-tile" style={`color: ${p.tint === "currentColor" ? "var(--foreground)" : p.tint};`} set:html={logos[p.id]} />
+              <div class="min-w-0">
+                <h3 class="font-semibold">{p.name}</h3>
+                <p class="mt-1 text-muted-foreground">{p.tracks}</p>
+                <p class="mt-2 text-sm text-muted-foreground"><a href={p.tokenUrl} class="link-inline">Token</a>: {p.token}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- Details around the Settings window -->
+    <section class="wrap py-16 md:py-24" aria-labelledby="details">
+      <h2 id="details" class="title max-w-2xl">The stuff you’d open the dashboard for.</h2>
+      <div class="mt-10 grid gap-4 lg:grid-cols-3">
+        <figure class="card overflow-hidden p-2 lg:col-span-2 lg:row-span-2">
+          <SettingsMock label="Deployed Yet? Settings: an accounts sidebar and a Vercel team’s projects with a toggle for each." />
+        </figure>
+        {details.map((f) => (
+          <article class="card p-6">
+            <h3 class="text-lg font-bold tracking-[-0.015em]">{f.title}</h3>
+            <p class="mt-2 text-muted-foreground">{f.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <!-- Install: two ways in -->
+    <section id="install" class="wrap py-16 md:py-24" aria-labelledby="install-title">
+      <div class="card relative overflow-hidden rounded-[32px] px-5 py-12 text-center md:px-12 md:py-24">
+        <div class="relative mx-auto flex max-w-xl flex-col items-center">
+          <h2 id="install-title" class="display text-[2.5rem] md:text-[3.75rem]">Stop refreshing the dashboard.</h2>
+          <div class="tabs mt-8 w-full" data-tabs>
+            <div class="tablist" role="tablist" aria-label="Ways to install">
+              <button role="tab" id="tab-dmg" aria-controls="panel-dmg" type="button">Download</button>
+              <button role="tab" id="tab-src" aria-controls="panel-src" type="button">Source</button>
+            </div>
+            <div class="mt-4">
+              <div role="tabpanel" id="panel-dmg" aria-labelledby="tab-dmg" class="panel">
+                <a href={DOWNLOAD_URL} class="btn-primary h-12 px-6">Download for Mac</a>
+                <p class="text-sm text-muted-foreground">macOS 14 or later. One app, no installer.</p>
+              </div>
+              <div role="tabpanel" id="panel-src" aria-labelledby="tab-src" class="panel">
+                <button type="button" class="command" data-copy={clone} aria-label="Copy the build-from-source command"><span data-copy-label>{clone}</span></button>
+                <p class="text-sm text-muted-foreground">Needs Xcode and Tuist. MIT licensed.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="wrap py-16 md:py-24" aria-labelledby="faq-title">
+      <div class="grid gap-10 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] md:gap-14">
+        <div>
+          <h2 id="faq-title" class="title">Questions.</h2>
+          <p class="mt-4 max-w-xs text-muted-foreground">Something else? <a href={`${REPO_URL}/issues`} class="link-inline">Open an issue</a> and I’ll answer it there.</p>
+        </div>
+        <div class="card divide-y divide-[var(--border)]">
+          {faqs.map((f) => (
+            <details class="faq p-5 md:p-6">
+              <summary class="-mx-5 -mt-5 flex cursor-pointer list-none items-center justify-between gap-4 px-5 pt-5 font-semibold md:-mx-6 md:-mt-6 md:px-6 md:pt-6"><!-- the whole top of the card is the tap target -->
+                {f.q}
+                <svg aria-hidden="true" viewBox="0 0 24 24" class="chev size-4 shrink-0 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+              </summary>
+              <p class="mt-3 text-muted-foreground">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap flex flex-col gap-4 border-t border-[var(--border)] py-10 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+    <p>© {new Date().getFullYear()} Deployed Yet? MIT licensed.</p>
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+      <a href="/privacy" class="link">Privacy</a>
+      <a href={REPO_URL} class="link">GitHub</a>
+      <a href={COFFEE_URL} class="link">Buy me a coffee</a>
+      <a href="https://drawne.com" class="link">By Andy Feliciotti</a>
+    </div>
+  </footer>
+
+  <script>
+    import { mountCopy, mountLight, mountTabs } from "~/lib/light";
+    import { mountTicker } from "~/lib/ticker";
+
+    const light = document.querySelector<HTMLCanvasElement>("[data-light]");
+    if (light) void mountLight(light);
+    const ticker = document.querySelector<HTMLElement>("[data-ticker]");
+    if (ticker) mountTicker(ticker);
+    const tabs = document.querySelector<HTMLElement>("[data-tabs]");
+    if (tabs) mountTabs(tabs);
+    mountCopy();
+  </script>
+</Layout>

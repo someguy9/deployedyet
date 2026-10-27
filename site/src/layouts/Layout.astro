@@ -1,0 +1,75 @@
+---
+// Self-hosted variable Inter: one file, no third-party font request.
+import "@fontsource-variable/inter/wght.css";
+import "~/styles/global.css";
+import { SITE, faqs } from "~/lib/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+}
+
+const {
+  title = "Deployed Yet? | Vercel, Cloudflare and GitHub deploys in your Mac menu bar",
+  description = "A free, open-source Mac menu bar app that shows whether your Vercel, Cloudflare and GitHub Actions deploys are building, live or broken. Every account, every team.",
+  noindex = false,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, SITE).toString();
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Deployed Yet?",
+    description,
+    url: SITE,
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "macOS 14 or later",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    isAccessibleForFree: true,
+    license: "https://opensource.org/licenses/MIT",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  },
+];
+---
+
+<!doctype html>
+<html lang="en" class="overflow-x-clip">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0b0c0f" /><!-- the paper token, so Safari's toolbar matches the page -->
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <title>{title}</title>
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Deployed Yet?" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={`${SITE}/og.jpg`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A green beam of light over “Your menu bar knows if it shipped.” and a “Live in 31s” deploy" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <!-- Simple Analytics: no cookies, no personal data. The app itself has no analytics. -->
+    <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+  </head>
+  <body class="min-h-screen overflow-x-clip antialiased">
+    <slot />
+    <p class="sr-only" role="status" data-copy-status></p>
+  </body>
+</html>

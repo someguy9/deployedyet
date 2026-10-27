@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Static files only: no Worker script runs, so requests are free and there's nothing to log.
+  "name": "deployedyet",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    // /privacy serves privacy/index.html; /privacy/ redirects to it, matching the sitemap and canonical URLs.
+    "html_handling": "drop-trailing-slash"
+  },
+  // The domain is a zone in this Cloudflare account, so the Worker claims it directly.
+  "routes": [{ "pattern": "deployedyet.com", "custom_domain": true }],
+  // One public address: no duplicate deployedyet.<account>.workers.dev copy and no preview URLs to get indexed.
+  "workers_dev": false,
+  "preview_urls": false
+}

@@ -1,0 +1,17 @@
+*.xcodeproj
+*.xcworkspace
+.DS_Store
+.astro/
+.build/
+.wrangler/
+Derived/
+build/
+dist/
+node_modules/
+
+# Local-only: notes, old screenshots and editor/agent config never leave this Mac.
+.local/
+.claude/
+# Secrets for wrangler dev and any future env files.
+.dev.vars
+.env*

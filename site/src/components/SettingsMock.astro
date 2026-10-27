@@ -1,0 +1,130 @@
+---
+// The app's Settings window, rebuilt from SettingsView.swift: 860pt wide with a 250pt sidebar, scaled through --pt
+// like MenuMock. Clipped at the bottom the way a real window shows the top of a long project list.
+import vercel from "~/icons/vercel.svg?raw";
+
+const projects = [
+  { name: "areacode411", when: "last month", on: false },
+  { name: "baybridgestatus", when: "2 days ago", on: true },
+  { name: "bestofficelines", when: "2 weeks ago", on: false },
+  { name: "calculatebox", when: "last month", on: false },
+  { name: "colorkit", when: "5 days ago", on: true },
+  { name: "croncalculator", when: "3 weeks ago", on: false },
+  { name: "crushimage", when: "4 weeks ago", on: false },
+]
+const { label } = Astro.props;
+---
+
+<div class="fit">
+  <div class="window" role="img" aria-label={label}>
+    <div class="titlebar">
+      <span class="lights"><i class="close"></i><i></i><i></i></span>
+      <span class="wtitle">drawne</span>
+    </div>
+    <div class="body">
+      <aside class="sidebar">
+        <p class="group-title">Accounts</p>
+        <div class="account selected">
+          <span class="tile"><span class="logo" set:html={vercel} /></span>
+          <span><span class="block">drawne</span><span class="block small">Vercel · 8 of 28</span></span>
+        </div>
+        <p class="group-title">App</p>
+        <div class="account">
+          <svg class="accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>General</span>
+        </div>
+        <div class="add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Add Account</span>
+        </div>
+      </aside>
+      <div class="detail">
+        <div class="group">
+          <div class="header">
+            <span class="tile big"><span class="logo" set:html={vercel} /></span>
+            <span class="grow">
+              <span class="block name">drawne</span>
+              <span class="block callout">Vercel · 8 of 28 picked · 1 team</span>
+              <span class="conn"><i></i>Connected · checked 1 minute ago</span>
+            </span>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+          </div>
+          <div class="cell filter">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <span>Filter 28 projects</span>
+          </div>
+        </div>
+        <p class="team"><strong>Drawne</strong><span>8 of 28</span><span class="all">All</span></p>
+        <div class="group">
+          {projects.map((p) => (
+            <div class="cell project">
+              <span class="grow"><span class="block">{p.name}</span><span class="block small">Deployed {p.when}</span></span>
+              <span class:list={["switch", { on: p.on }]}></span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .fit { container-type: inline-size; width: 100%; }
+  .window {
+    --pt: calc(100cqw / 860);
+    display: flex;
+    flex-direction: column;
+    height: calc(560 * var(--pt));
+    overflow: hidden;
+    border-radius: calc(10 * var(--pt));
+    background: var(--color-mac-window);
+    box-shadow: inset 0 0 0 1px var(--color-mac-edge);
+    color: var(--color-mac-label);
+    font-family: var(--font-mac);
+    font-size: calc(13 * var(--pt));
+    line-height: 1.25;
+    -webkit-font-smoothing: antialiased;
+  }
+  p { margin: 0; }
+  svg { flex: none; }
+  .block { display: block; }
+  .small { margin-top: calc(1 * var(--pt)); font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); }
+  .titlebar { position: relative; display: flex; align-items: center; height: calc(28 * var(--pt)); padding: 0 calc(12 * var(--pt)); border-bottom: 1px solid var(--color-mac-hairline); }
+  .lights { display: flex; gap: calc(8 * var(--pt)); }
+  .lights i { width: calc(12 * var(--pt)); height: calc(12 * var(--pt)); border-radius: 50%; background: var(--color-mac-fill); }
+  .lights .close { background: var(--color-mac-close); }
+  .wtitle { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 600; color: var(--color-mac-label-2); }
+  .body { display: flex; flex: 1; min-height: 0; }
+  .sidebar { position: relative; flex: none; width: calc(250 * var(--pt)); padding: calc(10 * var(--pt)) calc(10 * var(--pt)) 0; background: var(--color-mac-sidebar); border-right: 1px solid var(--color-mac-hairline); }
+  .group-title { padding: calc(8 * var(--pt)) calc(8 * var(--pt)) calc(4 * var(--pt)); font-size: calc(11 * var(--pt)); font-weight: 600; color: var(--color-mac-label-3); }
+  .account { display: flex; align-items: center; gap: calc(10 * var(--pt)); padding: calc(6 * var(--pt)) calc(8 * var(--pt)); border-radius: calc(6 * var(--pt)); }
+  .account > svg { width: calc(16 * var(--pt)); height: calc(16 * var(--pt)); }
+  .selected { background: var(--color-mac-select); }
+  .accent { color: var(--color-mac-blue); }
+  .tile { display: grid; place-items: center; flex: none; width: calc(28 * var(--pt)); height: calc(28 * var(--pt)); border-radius: calc(7 * var(--pt)); background: var(--color-mac-group); }
+  .tile .logo { display: block; width: calc(14 * var(--pt)); height: calc(14 * var(--pt)); }
+  .tile.big { width: calc(44 * var(--pt)); height: calc(44 * var(--pt)); border-radius: calc(10 * var(--pt)); }
+  .tile.big .logo { width: calc(22 * var(--pt)); height: calc(22 * var(--pt)); }
+  .logo :global(svg) { display: block; width: 100%; height: 100%; }
+  .add { position: absolute; inset: auto 0 0; display: flex; align-items: center; gap: calc(8 * var(--pt)); padding: calc(10 * var(--pt)) calc(14 * var(--pt)); border-top: 1px solid var(--color-mac-hairline); color: var(--color-mac-label-2); }
+  .add svg { width: calc(14 * var(--pt)); height: calc(14 * var(--pt)); }
+  .detail { flex: 1; min-width: 0; padding: calc(20 * var(--pt)); }
+  .group { border-radius: calc(8 * var(--pt)); background: var(--color-mac-group); box-shadow: inset 0 0 0 1px var(--color-mac-hairline); }
+  .header { display: flex; align-items: center; gap: calc(14 * var(--pt)); padding: calc(12 * var(--pt)) calc(12 * var(--pt)); }
+  .grow { flex: 1; min-width: 0; }
+  .name { font-size: calc(15 * var(--pt)); font-weight: 600; }
+  .callout { margin-top: calc(2 * var(--pt)); font-size: calc(12 * var(--pt)); color: var(--color-mac-label-2); }
+  .conn { display: flex; align-items: center; gap: calc(5 * var(--pt)); margin-top: calc(3 * var(--pt)); font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); }
+  .conn i { width: calc(6 * var(--pt)); height: calc(6 * var(--pt)); border-radius: 50%; background: var(--color-mac-green); }
+  .icon { width: calc(14 * var(--pt)); height: calc(14 * var(--pt)); color: var(--color-mac-label-2); }
+  .cell { display: flex; align-items: center; gap: calc(8 * var(--pt)); margin: 0 calc(12 * var(--pt)); padding: calc(9 * var(--pt)) 0; border-top: 1px solid var(--color-mac-hairline); }
+  .group > .cell:first-child { border-top: 0; }
+  .filter { color: var(--color-mac-label-3); }
+  .team { display: flex; align-items: baseline; gap: calc(6 * var(--pt)); padding: calc(18 * var(--pt)) calc(12 * var(--pt)) calc(7 * var(--pt)); }
+  .team span { color: var(--color-mac-label-2); }
+  .team .all { margin-left: auto; }
+  .switch { position: relative; flex: none; width: calc(30 * var(--pt)); height: calc(17 * var(--pt)); border-radius: 999px; background: var(--color-mac-fill); }
+  .switch::after { content: ""; position: absolute; top: calc(1.5 * var(--pt)); left: calc(1.5 * var(--pt)); width: calc(14 * var(--pt)); height: calc(14 * var(--pt)); border-radius: 50%; background: var(--color-mac-knob); }
+  .switch.on { background: var(--color-mac-blue); }
+  .switch.on::after { left: auto; right: calc(1.5 * var(--pt)); }
+</style>
