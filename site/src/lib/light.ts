@@ -81,28 +81,6 @@ export async function mountLight(canvas: HTMLCanvasElement) {
   }
 }
 
-/** Accessible tabs; without JS every panel simply shows. */
-export function mountTabs(root: HTMLElement) {
-  const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-  const panels = [...root.querySelectorAll<HTMLElement>('[role="tabpanel"]')];
-  const select = (i: number, focus = false) => {
-    tabs.forEach((t, j) => {
-      t.setAttribute("aria-selected", String(i === j));
-      t.tabIndex = i === j ? 0 : -1;
-      panels[j].hidden = i !== j;
-    });
-    if (focus) tabs[i].focus();
-  };
-  tabs.forEach((t, i) => {
-    t.addEventListener("click", () => select(i));
-    t.addEventListener("keydown", (e) => {
-      const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-      if (step) select((i + step + tabs.length) % tabs.length, true);
-    });
-  });
-  select(0);
-}
-
 /** Copy buttons: `data-copy` holds the text; the label says "Copied" for a moment. */
 export function mountCopy() {
   const status = document.querySelector("[data-copy-status]"); // the buttons' aria-labels hide "Copied", so say it here

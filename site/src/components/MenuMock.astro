@@ -78,7 +78,7 @@ const { label } = Astro.props;
 </script>
 
 <style>
-  .fit { --pt: calc(100cqw / 380); container-type: inline-size; width: 100%; font-family: var(--font-mac); }
+  .fit { --pt: calc(100cqw / 380); position: relative; isolation: isolate; container-type: inline-size; width: 100%; font-family: var(--font-mac); }
   .menubar {
     display: flex;
     align-items: center;
@@ -87,20 +87,27 @@ const { label } = Astro.props;
     height: calc(24 * var(--pt));
     padding: 0 calc(8 * var(--pt));
     border-radius: calc(6 * var(--pt));
-    background: var(--color-mac-bar);
-    box-shadow: inset 0 -1px 0 var(--color-mac-hairline);
+    /* a slice of a full-width bar, not a box: it fades in from the left (gradients, not a mask, so the ✓'s light can spill) */
+    background:
+      linear-gradient(to right, transparent, var(--color-mac-hairline) 45%) bottom / 100% 1px no-repeat,
+      linear-gradient(to right, transparent, var(--color-mac-bar) 45%);
     color: var(--color-mac-bar-ink);
     font-size: calc(13 * var(--pt));
     font-weight: 500;
     -webkit-font-smoothing: antialiased;
-    /* a slice of a full-width bar, not a box: it fades in from the left */
-    -webkit-mask-image: linear-gradient(to right, transparent, black 45%);
-    mask-image: linear-gradient(to right, transparent, black 45%);
   }
   .item { display: grid; place-items: center; height: calc(20 * var(--pt)); padding: 0 calc(7 * var(--pt)); border-radius: calc(5 * var(--pt)); }
   .item svg { width: calc(15 * var(--pt)); height: calc(15 * var(--pt)); }
   .item .battery { width: calc(24 * var(--pt)); height: calc(11 * var(--pt)); }
-  .active { background: var(--color-mac-bar-active); }
+  .active { position: relative; background: var(--color-mac-bar-active); }
+  /* The page's one light source: the ✓ answers, and its green falls down over the menu it opened. */
+  .active::after {
+    content: ""; position: absolute; z-index: -1; left: 50%; top: 50%; pointer-events: none;
+    width: calc(620 * var(--pt)); height: calc(440 * var(--pt)); translate: -50% -18%; /* wider than the menu, so it spills past both sides */
+    background:
+      radial-gradient(12% 10% at 50% 18%, color-mix(in oklch, var(--color-ship) 36%, transparent), transparent),
+      radial-gradient(closest-side, color-mix(in oklch, var(--color-ship) 16%, transparent), transparent);
+  }
   .active svg { width: calc(13 * var(--pt)); height: calc(13 * var(--pt)); }
   .clock { font-variant-numeric: tabular-nums; }
   .menu {
@@ -108,7 +115,7 @@ const { label } = Astro.props;
     overflow: hidden;
     border-radius: calc(12 * var(--pt));
     background: var(--color-mac-panel);
-    box-shadow: inset 0 0 0 1px var(--color-mac-edge), var(--shadow-shot);
+    box-shadow: inset 0 1px 0 color-mix(in oklch, var(--color-ship) 30%, transparent), inset 0 0 0 1px var(--color-mac-edge), var(--shadow-shot); /* its top edge catches the ✓'s light */
     color: var(--color-mac-label);
     font-family: var(--font-mac);
     font-size: calc(13 * var(--pt));

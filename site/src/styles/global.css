@@ -1,6 +1,6 @@
 /* Hallmark v2.0.0 · theme: custom · idea: "a deploy light: the hero's glow shifts from building amber to shipped green, the menu bar's answer as atmosphere" · vibe: "dark, exact, one warm sprinkle of play" · paper: near-black (t3.codes and vercel.com lineage, by request) · accent: white for action, amber and green only as deploy states · faces: Inter Variable, system mono for commands · hero: centred claim among floating provider tiles over a vgpu WebGPU light shader, the real menu screenshot below · signature: the backdrop's light changing colour as a deploy lands · posture: dark/grotesk-medium/neutral · modes: dark · genre: modern-minimal */
 /* critique: near-black with a coloured glow is a spent default; kept because the user asked for t3.codes' look, earned by the glow's colour carrying the app's real states and the real product screenshot carrying the page. */
-/* answered F7: pill radius on the tablist and nav is on controls; the focus ring follows the control it sits on. */
+/* answered F7: pill radius on the nav and buttons is on controls; the focus ring follows the control it sits on. */
 /* waive 47a, 63: MenuMock and SettingsMock rebuild the app's own UI from its SwiftUI source, by request ("make it look exactly like the app"); the title bar and the · separators are the app's real chrome and copy. */
 /* waive 29: translucent nav is the Apple material the user asked for (apple-design § 12); solid under prefers-reduced-transparency. */
 @import "tailwindcss";
@@ -280,30 +280,18 @@ html:not(.js) .ticker .deploy[data-state="failed"] .status-failed { display: inl
 .logo-tile svg { width: 1.25rem; height: 1.25rem; }
 
 /* ---------- Product light: slight, static, and always from the product's own states ---------- */
-/* The menu bar's ✓ spills a little green down past the menu's edges. */
-.lit-menu { isolation: isolate; }
-.lit-menu::before {
-  content: ""; position: absolute; z-index: -1; inset: -20% -30% -12%; pointer-events: none;
-  background:
-    radial-gradient(28% 13% at 63% 15%, color-mix(in oklch, var(--color-ship) 34%, transparent), transparent 80%),
-    radial-gradient(34% 46% at 78% 44%, color-mix(in oklch, var(--color-ship) 8%, transparent), transparent 76%),
-    radial-gradient(42% 32% at 24% 86%, color-mix(in oklch, var(--color-ship) 7%, transparent), transparent 76%);
-}
-/* Providers: light catches the card's top-right edge, and each logo glows faintly in its own colour. */
-.lit-card { position: relative; } /* no isolation: its glow stays behind the card, peeking past the corner */
+/* One rule: light only comes from the app's own ✓ (MenuMock draws the menu's), plus each provider's own colour. */
+/* Providers: light catches the card's top edge, and each logo glows faintly in its own colour. */
+.lit-card { position: relative; }
 .lit-card::before {
   content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(225deg, color-mix(in oklch, var(--color-ink) 24%, transparent), transparent 38%);
+  background: linear-gradient(to bottom, color-mix(in oklch, var(--color-ink) 18%, transparent), transparent 30%);
   -webkit-mask: linear-gradient(var(--color-ink) 0 0) content-box, linear-gradient(var(--color-ink) 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude; /* leaves only the 1px border ring */
 }
-.lit-card::after {
-  content: ""; position: absolute; z-index: -1; top: -4.5rem; right: -4.5rem; width: 60%; height: 65%; pointer-events: none;
-  background: radial-gradient(closest-side, color-mix(in oklch, var(--color-ship) 20%, transparent), transparent);
-}
 .lit-card .logo-tile { box-shadow: 0 0 1.75rem -0.5rem color-mix(in oklch, currentColor 45%, transparent); }
-/* Settings: a prism along the top edge (the deploy colours, amber to white to green), and a green spill off the corner. */
-.lit-window { position: relative; box-shadow: inset 0 0 0 1px var(--color-rule), -2.5rem 3rem 5.5rem -3rem color-mix(in oklch, var(--color-ship) 38%, transparent); }
+/* Settings: a prism along the top edge (the deploy colours, amber to white to green) and a plain deep shadow. */
+.lit-window { position: relative; box-shadow: inset 0 0 0 1px var(--color-rule), 0 40px 90px -40px var(--color-shadow); }
 .lit-window::before {
   content: ""; position: absolute; z-index: 1; top: 0; left: 14%; right: 32%; height: 1px; pointer-events: none;
   background: linear-gradient(90deg, transparent,
@@ -319,27 +307,23 @@ html:not(.js) .ticker .deploy[data-state="failed"] .status-failed { display: inl
 
 /* ---------- Install ---------- */
 
-.tablist {
-  display: inline-flex;
-  gap: 0.25rem;
-  padding: 0.3rem;
-  border-radius: 999px;
-  background: var(--color-paper-3);
+/* The last screen: the app icon is the light, its green pooling down the card like the hero's light settled. */
+.cta { border-radius: 32px; isolation: isolate; }
+.cta::before {
+  content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(22% 18% at 50% 0, color-mix(in oklch, var(--color-ship) 26%, transparent), transparent),
+    radial-gradient(60% 55% at 50% 0, color-mix(in oklch, var(--color-ship) 9%, transparent), transparent);
 }
-.tablist [role="tab"] {
-  height: 2.25rem;
-  white-space: nowrap;
-  padding-inline: 1rem;
-  border-radius: 999px;
-  font-size: 0.875rem;
-  font-weight: 550;
-  color: var(--color-ink-2);
-  transition: background-color 150ms ease-out, color 150ms ease-out;
+.cta::after { /* where the light enters: a thin bright line along the top edge, like the Settings prism */
+  content: ""; position: absolute; top: 0; left: 30%; right: 30%; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--color-ship) 80%, transparent), transparent);
 }
-.tablist [role="tab"]:hover { color: var(--color-ink); }
-.tablist [role="tab"][aria-selected="true"] { background: var(--color-ink); color: var(--color-paper); }
-.panel { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; min-height: 5.5rem; }
-.panel[hidden] { display: none; }
+.cta-icon {
+  width: 6rem; height: 6rem;
+  filter: drop-shadow(0 18px 28px var(--color-shadow)) drop-shadow(0 0 36px color-mix(in oklch, var(--color-ship) 28%, transparent));
+}
+
 .command {
   max-width: 100%;
   padding: 0.85rem 1.1rem;
