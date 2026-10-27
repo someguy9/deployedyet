@@ -7,15 +7,16 @@ const points = [
   { head: "Your tokens stay in your Keychain", body: "They’re stored on this Mac and only sent to the provider they belong to (api.vercel.com, api.cloudflare.com or api.github.com)." },
   { head: "Deploy details are cached on your Mac", body: "The app keeps project names, branches and commit messages on disk so the menu fills in right away. Removing an account deletes its token and clears its projects from that cache." },
   { head: "Push checks only read git’s push log", body: "If you turn on “Check right after I push”, the app watches the folder you pick and reads only the last line of git’s push log there. It never runs git or reads your code." },
+  { head: "Update checks send no tokens", body: "Once a day the app downloads a small update list from this project’s GitHub releases. It sends no tokens and no details about your Mac, and you can turn it off in General." },
   { head: "This website only counts page views", body: "It uses Simple Analytics, which doesn’t set cookies or collect personal data." },
 ];
 ---
 
-<Layout title="Privacy | Deployed Yet?" description="What Deployed Yet? does with your data: nothing leaves your Mac except calls to the deploy providers you connect.">
+<Layout title="Privacy | Deployed Yet?" description="What Deployed Yet? does with your data: nothing leaves your Mac except calls to the deploy providers you connect and a daily update check.">
   <main id="main" class="wrap max-w-2xl py-20">
     <a href="/" class="link text-sm text-muted-foreground">Back to Deployed Yet?</a>
     <h1 class="title mt-6">Privacy</h1>
-    <p class="mt-4 text-lg text-muted-foreground">Nothing leaves your Mac except calls to the providers you connect.</p>
+    <p class="mt-4 text-lg text-muted-foreground">Nothing leaves your Mac except calls to the providers you connect and a daily update check.</p>
     <dl class="mt-12 space-y-8">
       {points.map((p) => (
         <div class="border-l border-[var(--color-rule-strong)] pl-5">

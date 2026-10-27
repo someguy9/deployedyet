@@ -5,8 +5,9 @@
 #   app/release.sh                # the real thing
 #   app/release.sh --no-notarize  # everything but Apple's check, for trying it out
 #
-# One-time setup: a "Developer ID Application" certificate in your Keychain, and notary credentials saved with
+# One-time setup: a "Developer ID Application" certificate in your Keychain, notary credentials saved with
 #   xcrun notarytool store-credentials deployedyet --apple-id <you> --team-id WX67M3Z25T
+# and the Sparkle update key (already made: login Keychain, account "deployedyet"; its public half is in Project.swift).
 # The first run asks permission for your terminal to control Finder (it lays out the DMG window).
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -19,6 +20,8 @@ VOLUME="Deployed Yet?"
 OUT=build/release # its own folder: clearing it never touches the Debug build in build/debug
 APP=$OUT/DerivedData/Build/Products/Release/DeployedYet.app
 DMG=$OUT/DeployedYet.dmg # same name every release, so releases/latest/download/DeployedYet.dmg always works
+APPCAST=$OUT/appcast.xml # attached next to the DMG; the app reads releases/latest/download/appcast.xml
+SPARKLE_BIN=$OUT/DerivedData/SourcePackages/artifacts/sparkle/Sparkle/bin
 NOTARIZE=1
 [[ "${1:-}" == "--no-notarize" ]] && NOTARIZE=0
 
@@ -46,6 +49,22 @@ tuist xcodebuild build -scheme DeployedYet -configuration Release -derivedDataPa
   CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$SIGN_ID" DEVELOPMENT_TEAM="$TEAM" \
   ENABLE_HARDENED_RUNTIME=YES OTHER_CODE_SIGN_FLAGS="--timestamp" CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO
 VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP/Contents/Info.plist")
+BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$APP/Contents/Info.plist")
+# Sparkle only offers a higher CFBundleVersion, so a release that forgot the bump would never reach anyone.
+LIVE=$(curl -fsL https://github.com/someguy9/deployedyet/releases/latest/download/appcast.xml 2>/dev/null \
+  | sed -n 's/.*<sparkle:version>\([0-9]*\)<.*/\1/p' | head -1 || true) # no appcast yet: nothing to compare
+[[ -z "$LIVE" || "$BUILD" -gt "$LIVE" ]] || fail "CFBundleVersion is $BUILD but the live release is build $LIVE. Bump it in Project.swift."
+
+# Xcode signs Sparkle.framework but leaves its helpers (the installer and updater it launches) with Sparkle's own
+# signature. Re-sign them inside out with ours, then the app, so notarization and library validation pass.
+SPARKLE=$APP/Contents/Frameworks/Sparkle.framework/Versions/B
+sign() { codesign --force --sign "$SIGN_ID" --options runtime --timestamp "$@"; }
+sign "$SPARKLE/XPCServices/Installer.xpc"
+sign --preserve-metadata=entitlements "$SPARKLE/XPCServices/Downloader.xpc"
+sign "$SPARKLE/Autoupdate"
+sign "$SPARKLE/Updater.app"
+sign "$APP/Contents/Frameworks/Sparkle.framework"
+sign --preserve-metadata=entitlements,requirements "$APP"
 
 step "Checking the app's signature"
 codesign --verify --deep --strict "$APP"
@@ -114,10 +133,25 @@ if (( NOTARIZE )); then
   xcrun stapler staple -q "$DMG"
   xcrun stapler validate -q "$DMG"
   spctl -a -t open --context context:primary-signature -v "$DMG"
+
+  step "Writing the update feed"
+  # Signs the stapled DMG with the key in Keychain (macOS may ask to allow generate_appcast the first time).
+  FEED=$OUT/feed
+  mkdir -p "$FEED"
+  cp "$DMG" "$FEED/"
+  "$SPARKLE_BIN/generate_appcast" --account deployedyet \
+    --download-url-prefix "https://github.com/someguy9/deployedyet/releases/download/v$VERSION/" \
+    --link https://deployedyet.com "$FEED"
+  mv "$FEED/appcast.xml" "$APPCAST"
+  rm -rf "$FEED"
+  grep -q "sparkle:edSignature" "$APPCAST" || fail "The appcast has no update signature."
 else
   step "Skipped notarizing (--no-notarize): Gatekeeper will warn on other Macs until this runs for real"
 fi
 
 step "Done"
 echo "$DMG  ($(du -h "$DMG" | cut -f1 | tr -d ' '), sha256 $(shasum -a 256 "$DMG" | cut -c1-16)…)"
-if (( NOTARIZE )); then echo "Publish: gh release create v$VERSION app/$DMG --title \"Deployed Yet? $VERSION\" --generate-notes"; fi # an if, so --no-notarize still exits 0
+if (( NOTARIZE )); then # an if, so --no-notarize still exits 0
+  echo "Publish: gh release create v$VERSION app/$DMG app/$APPCAST --title \"Deployed Yet? $VERSION\" --generate-notes"
+  echo "Then redeploy the site so it shows $VERSION: bun run --cwd site deploy"
+fi

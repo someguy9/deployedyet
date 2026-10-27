@@ -25,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = Store()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Updater.shared.start(store: store)
         // The MenuBarExtra's window is a panel and is key while the menu is open (Settings is a plain window).
         let center = NotificationCenter.default
         center.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main) { [store] note in

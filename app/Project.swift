@@ -2,6 +2,9 @@ import ProjectDescription
 
 let project = Project(
     name: "DeployedYet",
+    packages: [
+        .remote(url: "https://github.com/sparkle-project/Sparkle", requirement: .upToNextMajor(from: "2.10.1")),
+    ],
     targets: [
         .target(
             name: "DeployedYet",
@@ -13,11 +16,17 @@ let project = Project(
                 "LSUIElement": true,
                 "LSApplicationCategoryType": "public.app-category.developer-tools",
                 "CFBundleDisplayName": "Deployed Yet?",
-                "CFBundleShortVersionString": "0.1.1",
-                "CFBundleVersion": "2",
+                "CFBundleShortVersionString": "0.1.2",
+                "CFBundleVersion": "3", // Sparkle compares this one: bump it every release
+                // Updates: Sparkle reads the appcast attached to the newest GitHub release (release.sh makes it).
+                "SUFeedURL": "https://github.com/someguy9/deployedyet/releases/latest/download/appcast.xml",
+                "SUPublicEDKey": "i8vRR31daZXNtM/cs9W+/X0GG+L56WXwrsHIV+2hAJc=", // private half: login Keychain, account "deployedyet"
+                "SUEnableAutomaticChecks": true, // on by default, no "check automatically?" prompt
+                "SUAutomaticallyUpdate": true,
             ]),
             sources: ["Sources/**"],
             resources: ["Resources/**"],
+            dependencies: [.package(product: "Sparkle")],
             settings: .settings(base: [
                 "SWIFT_VERSION": "6.0",
                 "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "", // use the system accent

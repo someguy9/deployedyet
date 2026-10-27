@@ -406,6 +406,7 @@ private struct GeneralPane: View {
 
     var body: some View {
         @Bindable var store = store
+        @Bindable var updater = Updater.shared
         Form {
             Section {
                 Toggle("Launch at login", isOn: $launchAtLogin)
@@ -469,8 +470,16 @@ private struct GeneralPane: View {
                     }
                 }
                 .padding(.vertical, 4)
+                Toggle(isOn: $updater.automatic) {
+                    Text("Install updates automatically")
+                    Text("Checks GitHub once a day and swaps in the new version while nothing is building.")
+                }
+                LabeledContent("Updates") {
+                    Button("Check for Updates…") { updater.checkNow() }
+                        .disabled(!updater.canCheck)
+                }
                 LabeledContent("Privacy") {
-                    Text("Tokens stay in Keychain. The only network calls go to the APIs of the accounts you add.")
+                    Text("Tokens stay in Keychain and only go to the APIs of the accounts you add. Update checks send no tokens.")
                         .multilineTextAlignment(.trailing)
                         .foregroundStyle(.secondary)
                 }

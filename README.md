@@ -52,6 +52,8 @@ To make the menu fill in instantly, the app caches project names, branches and c
 
 "Check right after I push" is off until you pick a folder. It watches that folder for git pushes by reading only the last line of git's push log (`.git/logs/refs/remotes/`). It never runs git, never reads your code, and sends nothing anywhere; a push just makes the app check sooner.
 
+Updates come through [Sparkle](https://sparkle-project.org). Once a day the app downloads `appcast.xml` from the latest GitHub release, with no tokens and no system profile. A newer version is downloaded in the background, checked against the update key, and swapped in while nothing is building. You can turn this off in General.
+
 ## Build from source
 
 You need Xcode and [Tuist](https://tuist.dev) (`brew install tuist`).
@@ -66,7 +68,7 @@ That script generates the Xcode project, builds it and launches the app, quittin
 
 `app/Project.swift` signs with my team, so change `DEVELOPMENT_TEAM` to your own team ID before you build (it's in Xcode's Settings, under Accounts). Keeping the signature stable also stops Keychain from asking for permission after every rebuild.
 
-To cut a release, run `app/release.sh`. It builds the universal app signed with Developer ID, packs it into the drag-to-Applications DMG, gets it notarized and stapled, and checks that Gatekeeper accepts it. The DMG lands in `app/build/release/`. Add `--no-notarize` to try everything except Apple's check.
+To cut a release, run `app/release.sh`. It builds the universal app signed with Developer ID, packs it into the drag-to-Applications DMG, gets it notarized and stapled, checks that Gatekeeper accepts it, and writes a signed `appcast.xml` for Sparkle. Both land in `app/build/release/`, and both go on the GitHub release. Bump `CFBundleVersion` in `app/Project.swift` every release, since Sparkle only offers a higher build number (the script stops you if you forget). Add `--no-notarize` to try everything except Apple's check.
 
 ## The website
 
