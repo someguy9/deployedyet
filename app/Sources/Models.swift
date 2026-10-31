@@ -210,6 +210,22 @@ struct Deploy: Identifiable, Hashable, Codable {
     var shortCommit: String? { commit.map { String($0.prefix(7)) } }
 }
 
+struct DeployFilter {
+    var query = ""
+    var provider: Provider?
+    var state: DeployState?
+
+    func matches(_ deploy: Deploy) -> Bool {
+        guard provider == nil || provider == deploy.provider,
+              state == nil || state == deploy.state else { return false }
+        let fields = [deploy.projectName, deploy.team, deploy.accountLabel, deploy.branch ?? "",
+                      deploy.commit ?? "", deploy.message ?? "", deploy.provider.name, deploy.provider.rawValue]
+        return query.split(whereSeparator: \.isWhitespace).allSatisfy { term in
+            fields.contains { $0.localizedCaseInsensitiveContains(String(term)) }
+        }
+    }
+}
+
 struct Project: Identifiable, Hashable, Codable {
     let id: String
     let name: String

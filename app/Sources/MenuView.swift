@@ -2,11 +2,15 @@ import SwiftUI
 
 struct MenuView: View {
     @Environment(Store.self) private var store
+    @State private var filter = DeployFilter()
+    @FocusState private var searchFocused: Bool
+
+    private var matchingRows: [Deploy] { store.rows.filter(filter.matches) }
 
     /// Now first, then by day, like an activity feed: Failed, In progress, Today, This week, Earlier.
     private var sections: [(title: String, rows: [Deploy])] {
         let order = ["Failed", "In progress", "Today", "This week", "Earlier"]
-        let groups = Dictionary(grouping: store.rows) { d -> String in
+        let groups = Dictionary(grouping: matchingRows) { d -> String in
             switch d.state {
             case .failed where d.isRecentFailure: "Failed" // older failures sort by date with the rest
             case .building: "In progress"
@@ -33,6 +37,15 @@ struct MenuView: View {
             } else {
                 header
                 Divider().padding(.horizontal, 14)
+                filters
+                if matchingRows.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("No matching deployments").font(.callout.weight(.semibold))
+                        Text("Try another search or clear your filters.").font(.caption).foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                } else {
                 ScrollView {
                     // Only label the parts of a row that differ between rows: one team or one provider is noise.
                     let showTeam = Set(store.rows.map(\.team)).count > 1
@@ -58,6 +71,7 @@ struct MenuView: View {
                 }
                 .frame(maxHeight: 440)
                 .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             ForEach(store.accounts.filter { store.errors[$0.id] != nil }) { account in
@@ -95,6 +109,49 @@ struct MenuView: View {
             .padding(.vertical, 10)
         }
         .frame(width: 380)
+    }
+
+    private var filters: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Button { searchFocused = true } label: { Image(systemName: "magnifyingglass") }
+                    .buttonStyle(.borderless)
+                    .keyboardShortcut("f")
+                    .accessibilityLabel("Focus deployment search")
+                    .help("Search deployments (⌘F)")
+                TextField("Search deployments", text: $filter.query)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($searchFocused)
+                    .accessibilityLabel("Search deployments")
+            }
+            HStack(spacing: 8) {
+                Picker("Provider", selection: $filter.provider) {
+                    Text("All providers").tag(nil as Provider?)
+                    ForEach(Provider.allCases, id: \.self) { provider in
+                        Text(provider.name).tag(Optional(provider))
+                    }
+                }
+                .accessibilityLabel("Filter by provider")
+                Picker("State", selection: $filter.state) {
+                    Text("All states").tag(nil as DeployState?)
+                    ForEach([DeployState.failed, .building, .ready, .canceled], id: \.self) { state in
+                        Text(state.label).tag(Optional(state))
+                    }
+                }
+                .accessibilityLabel("Filter by deployment state")
+                Button("Clear") { filter = DeployFilter() }
+                    .help("Clear search and filters")
+                    .accessibilityLabel("Clear search and filters")
+            }
+            .labelsHidden()
+            HStack {
+                Text("\(matchingRows.count) of \(store.rows.count) deployments")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
     }
 
     /// Big answer up top: a badge matching the menu bar glyph, the headline, and a one-line summary.
