@@ -1,5 +1,12 @@
 [
   {
+    "tag_name": "v0.1.7",
+    "published_at": "2026-10-31T19:10:10Z",
+    "body": "## Tell Workers and Pages apart\n\n- A Cloudflare account can have a Worker and a Pages project with the same name. Settings used to show them as two identical rows; each Cloudflare project now says **Worker** or **Pages** next to its last deploy.\n- VoiceOver reads the kind with the project name too, so the two toggles no longer sound the same.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.7 (build 8)**\n\nBuilt from commit `cc00025001458745011368ba753aa60305277715` on `main`. Developer ID signed, Apple-notarized, stapled, and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `ff34d9bb44d74941bacd61cd18fc406fd2d5f845b2906b3b9e1fd1a65951f8b3`\n",
+    "draft": false,
+    "prerelease": false
+  },
+  {
     "tag_name": "v0.1.6",
     "published_at": "2026-10-31T17:32:57Z",
     "body": "## Better signals, without your project data\n\n- Measure whether project filters, collapse controls, and bulk selection help people navigate large accounts, so future improvements follow actual feature use.\n- Measure manual update checks and changes to the automatic-update preference to improve update discoverability.\n- Keep daily active use separate from an app merely running in the background, using anonymous installation counts rather than claiming to count people.\n\n## Privacy stays in your control\n\n- These additions use explicit user actions, not automatic screen tracking, session replay, or per-keystroke capture.\n- Search text, account/group identities, project names, repositories, deployment content, tokens, URLs, and error messages are never sent. Bulk-selection counts use coarse ranges.\n- Analytics remains optional and on by default in configured release builds. Turn off **Share usage analytics** in **Settings → General → Privacy** at any time. Existing opt-outs are preserved.\n- The privacy page now explains the additional feature-usage signals: https://deployedyet.com/privacy.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.6 (build 7)**\n\nBuilt from commit `3f8a0c94edca73e3821e89584ca0936d4f66444a`, merged unchanged in `45e72f9fb08e41bc272be4f27ecf821eaf2d2173`. Developer ID signed, Apple-notarized, stapled, and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `247d7298d6541d67530563dd2a88fa36db50a7af042880446076cb8ff2e3be06`\n\nChanges: https://github.com/someguy9/deployedyet/pull/6\n",
