@@ -69,7 +69,7 @@ protocol ProviderClient: Sendable {
     /// `discover`: list every project the token can see (Settings, auto-pick). `teams`: the teams to read
     /// deploys for; Vercel and Cloudflare read all teams when discovering, GitHub only ever reads picked repos.
     /// Teams that refuse are listed in `unreachable`; it throws only when nothing could be read.
-    func projects(account: Account, teams: Set<String>, discover: Bool) async throws -> (projects: [Project], unreachable: [TeamRef])
+    func projects(account: Account, teams: Set<String>, discover: Bool) async throws -> (projects: [Project], unreachable: [TeamRef], rateLimited: Bool)
     func suggestedLabel() async throws -> String
 }
 

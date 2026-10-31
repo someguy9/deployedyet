@@ -7,7 +7,7 @@ struct VercelClient: ProviderClient {
 
     /// Projects from every team the token can see. A team that refuses (SSO-enforced, removed)
     /// is reported in `unreachable` instead of failing the whole account.
-    func projects(account: Account, teams: Set<String>, discover: Bool) async throws -> (projects: [Project], unreachable: [TeamRef]) {
+    func projects(account: Account, teams: Set<String>, discover: Bool) async throws -> (projects: [Project], unreachable: [TeamRef], rateLimited: Bool) {
         let response: TeamsResponse = try await get("/v2/teams", ["limit": "100"])
         let teams = response.teams.filter { discover || teams.contains($0.id) }
         let results = await withTaskGroup(of: (team: TeamRef, projects: [Project], error: Error?).self) { group in
@@ -15,8 +15,9 @@ struct VercelClient: ProviderClient {
             return await group.reduce(into: []) { $0.append($1) }
         }
         let failed = results.filter { $0.error != nil }
-        if failed.count == teams.count, let error = failed.first?.error { throw error }
-        return (results.flatMap(\.projects), failed.map(\.team))
+        let rateLimit = failed.first { ($0.error as? AppError)?.isRateLimit == true }?.error
+        if failed.count == teams.count, let error = rateLimit ?? failed.first?.error { throw error }
+        return (results.flatMap(\.projects), failed.map(\.team), rateLimit != nil)
     }
 
     private func fetch(_ team: Team, account: Account) async -> (team: TeamRef, projects: [Project], error: Error?) {

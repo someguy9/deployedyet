@@ -12,7 +12,7 @@ struct GitHubClient: ProviderClient {
     /// Default branches learned on discovery. Runs don't carry it, and the first refresh of every launch is a full one.
     private static let defaultBranches = OSAllocatedUnfairLock<[String: String]>(initialState: [:])
 
-    func projects(account: Account, teams: Set<String>, discover: Bool) async throws -> (projects: [Project], unreachable: [TeamRef]) {
+    func projects(account: Account, teams: Set<String>, discover: Bool) async throws -> (projects: [Project], unreachable: [TeamRef], rateLimited: Bool) {
         var repos: [Repo]
         if discover {
             repos = []
@@ -48,13 +48,14 @@ struct GitHubClient: ProviderClient {
         }
         let runs = Dictionary(results.compactMap { r in r.runs.map { (r.repo, $0) } }, uniquingKeysWith: { a, _ in a })
         let failed = results.filter { $0.error != nil }
-        if !wanted.isEmpty, failed.count == wanted.count, !discover, let error = failed.first?.error { throw error }
+        let rateLimit = failed.first { ($0.error as? AppError)?.isRateLimit == true }?.error
+        if !wanted.isEmpty, failed.count == wanted.count, !discover, let error = rateLimit ?? failed.first?.error { throw error }
 
         // Repos that failed to load runs keep their last-known runs in the Store; leave them out here.
         let projects = repos
             .filter { !failed.map(\.repo).contains($0.full_name) }
             .map { $0.project(runs: runs[$0.full_name] ?? [], account: account) }
-        return (projects, failed.map { TeamRef(id: $0.repo, name: $0.repo) })
+        return (projects, failed.map { TeamRef(id: $0.repo, name: $0.repo) }, rateLimit != nil)
     }
 
     func suggestedLabel() async throws -> String {
