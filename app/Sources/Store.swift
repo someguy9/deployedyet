@@ -34,7 +34,9 @@ final class Store {
     var watched: Set<String> = []
     private(set) var projects: [Project] = []
     private(set) var errors: [UUID: String] = [:]
-    private(set) var lastUpdated: Date?
+    private(set) var lastSuccessfulChecks: [UUID: Date] = [:]
+    private var lastAttempt: Date?
+    var monitoringDegraded: Bool { !errors.isEmpty }
     /// Menu bar wobble frame while something builds. Only the label reads it.
     private(set) var wobbleFrame = 0
     /// One-shot ?→✓ / ?→! animation when the last build lands.
@@ -70,6 +72,7 @@ final class Store {
     private var lastFull: Date?
     private var lastPicked: Date?
     private var fullUnreachable: [UUID: [TeamRef]] = [:]
+    private var accountErrors: [UUID: String] = [:]
     private var backoff: [UUID: Date] = [:]
     private var wobbleTask: Task<Void, Never>?
     private let notificationDelegate = NotificationDelegate()
@@ -92,7 +95,7 @@ final class Store {
         pushFolder = UserDefaults.standard.string(forKey: "pushFolder")
         if let cache = Self.readCache() { // last-known rows instantly, honest "Updated 2h ago" until the first poll
             projects = cache.projects.filter { p in accounts.contains { $0.id == p.accountID } }
-            lastUpdated = cache.savedAt
+            lastSuccessfulChecks = (cache.successfulChecks ?? [:]).filter { id, _ in accounts.contains { $0.id == id } }
         }
         let center = UNUserNotificationCenter.current()
         center.delegate = notificationDelegate
@@ -142,7 +145,7 @@ final class Store {
     }
 
     var showsIcon: Bool {
-        !iconOnlyWhenBusy || accounts.isEmpty || menuOpen || justLanded || overall == .building || overall == .failed
+        !iconOnlyWhenBusy || accounts.isEmpty || menuOpen || justLanded || monitoringDegraded || overall == .building || overall == .failed
     }
 
     /// nil = nothing picked.
@@ -157,6 +160,7 @@ final class Store {
         if let first = failed.first {
             return failed.count == 1 ? "Nope. \(first.projectName) failed." : "Nope. \(failed.count) failed."
         }
+        if monitoringDegraded { return "Monitoring needs attention." }
         if !building.isEmpty { return "Not yet. \(building.count) building." }
         return rows.isEmpty ? "Nothing picked." : "Yep. All deployed."
     }
@@ -178,7 +182,7 @@ final class Store {
 
     /// Opening the menu shows current data: if it's more than a few seconds old, look now at every picked project.
     private func menuDidOpen() {
-        guard !refreshing, lastUpdated.map({ Date.now.timeIntervalSince($0) > 10 }) ?? true else { return }
+        guard !refreshing, lastAttempt.map({ Date.now.timeIntervalSince($0) > 10 }) ?? true else { return }
         lastPicked = nil
         wakePolling()
     }
@@ -197,7 +201,7 @@ final class Store {
 
     func refreshNow() async {
         lastPicked = nil
-        await refresh()
+        await refresh(full: true)
     }
 
     func refresh(full: Bool = false) async {
@@ -217,12 +221,19 @@ final class Store {
             let picked = mine.filter { selected.contains($0.id) }
             let polled = quick ? picked.filter { tracked($0).contains { $0.state == .building } } : picked
             let teams: Set<String>? = full ? nil : Set(polled.map(\.teamID))
-            if teams?.isEmpty == true || (backoff[account.id] ?? .distantPast) > .now { // nothing to ask, or rate limited
+            if (backoff[account.id] ?? .distantPast) > .now {
+                anyThrew = true
+                all += mine
+                continue
+            }
+            if teams?.isEmpty == true {
                 all += mine
                 continue
             }
             guard let token = Keychain.get(account.id) else {
-                errors[account.id] = "Token missing from Keychain. Remove and re-add this account."
+                let message = "Token missing from Keychain. Remove and re-add this account."
+                accountErrors[account.id] = message
+                errors[account.id] = message
                 all += mine
                 continue // permanent; retrying every 10s wouldn't help
             }
@@ -235,16 +246,19 @@ final class Store {
                 all += result.projects
                 // Last known for teams we didn't ask or that blipped; the dedupe below keeps fresh copies first.
                 all += mine.filter { p in failed.contains(p.teamID) || teams.map { !$0.contains(p.teamID) } ?? false }
-                if full { fullUnreachable[account.id] = result.unreachable }
-                // Teams only a full refresh looks at keep their warning between full refreshes.
                 let carried = (fullUnreachable[account.id] ?? []).filter { t in teams.map { !$0.contains(t.id) } ?? false }
-                errors[account.id] = Self.unreachableMessage(Array(Set(result.unreachable + carried)))
+                fullUnreachable[account.id] = Array(Set(result.unreachable + carried))
+                if full { accountErrors[account.id] = nil }
+                errors[account.id] = accountErrors[account.id] ?? Self.unreachableMessage(fullUnreachable[account.id] ?? [])
+                if full && errors[account.id] == nil { lastSuccessfulChecks[account.id] = .now }
             } catch {
+                accountErrors[account.id] = error.localizedDescription
                 errors[account.id] = error.localizedDescription
                 all += mine // keep last known
                 // Only blips force a full retry. A revoked token would otherwise make every account refresh every 10s.
                 if !((error as? AppError)?.isAuth ?? false) { anyThrew = true }
                 if (error as? AppError)?.isRateLimit == true { backoff[account.id] = .now.addingTimeInterval(60) }
+                if !((error as? AppError)?.isAuth ?? false) { lastFull = nil }
             }
         }
         // An account added mid-refresh keeps the projects addAccount loaded; one removed mid-refresh stays gone.
@@ -253,11 +267,12 @@ final class Store {
         var ids = Set<String>()
         projects = all.filter { live.contains($0.accountID) && ids.insert($0.id).inserted } // two tokens can see the same team
         errors = errors.filter { live.contains($0.key) }
-        lastUpdated = .now
+        lastSuccessfulChecks = lastSuccessfulChecks.filter { live.contains($0.key) }
+        lastAttempt = .now
         if full && !anyThrew { lastFull = .now } // after a failure, retry everything next tick
         if full && !anyThrew && known == nil { known = Set(projects.map(\.id)) } // first run of auto-pick: picks nothing
         if !quick { lastPicked = .now }
-        Self.writeCache(projects)
+        Self.writeCache(projects, successfulChecks: lastSuccessfulChecks)
         notifyFinished()
         updateWobble()
     }
@@ -303,9 +318,12 @@ final class Store {
         let client = provider.client(token: token)
         let label = label.isEmpty ? ((try? await client.suggestedLabel()) ?? provider.name) : label
         let account = Account(label: label, provider: provider)
-        let fetched = try await client.projects(account: account, teams: [], discover: true).projects // validates the token
+        let result = try await client.projects(account: account, teams: [], discover: true) // validates the token
+        let fetched = result.projects
         guard Keychain.set(token, for: account.id) else { throw AppError.keychain }
         accounts.append(account)
+        fullUnreachable[account.id] = result.unreachable
+        errors[account.id] = Self.unreachableMessage(result.unreachable)
         let cutoff = Date.now.addingTimeInterval(-14 * 86_400)
         let recent = fetched
             .filter { ($0.lastActive ?? .distantPast) > cutoff }
@@ -326,10 +344,12 @@ final class Store {
         Keychain.delete(account.id)
         backoff[account.id] = nil
         fullUnreachable[account.id] = nil
+        accountErrors[account.id] = nil
+        lastSuccessfulChecks[account.id] = nil
         accounts.removeAll { $0.id == account.id }
         // Picks stay: another token may see the same team. Unfetched ids are ignored by `rows`.
         projects.removeAll { $0.accountID == account.id }
-        Self.writeCache(projects) // its names and commits leave the disk now, not at the next poll
+        Self.writeCache(projects, successfulChecks: lastSuccessfulChecks) // its names and commits leave the disk now, not at the next poll
         errors[account.id] = nil
         updateWobble()
     }
@@ -470,6 +490,7 @@ final class Store {
     private struct Cache: Codable {
         let savedAt: Date
         let projects: [Project]
+        var successfulChecks: [UUID: Date]?
     }
 
     private static let cacheURL = URL.applicationSupportDirectory.appending(path: "DeployedYet/projects.json")
@@ -479,8 +500,8 @@ final class Store {
     }
 
     // ponytail: rewrites the whole file each poll (~200KB for 500 projects). Diff or debounce if that ever shows up.
-    private static func writeCache(_ projects: [Project]) {
-        guard let data = try? JSONEncoder().encode(Cache(savedAt: .now, projects: projects)) else { return }
+    private static func writeCache(_ projects: [Project], successfulChecks: [UUID: Date]) {
+        guard let data = try? JSONEncoder().encode(Cache(savedAt: .now, projects: projects, successfulChecks: successfulChecks)) else { return }
         try? FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: cacheURL, options: .atomic)
     }

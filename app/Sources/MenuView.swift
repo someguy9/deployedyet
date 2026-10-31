@@ -22,7 +22,9 @@ struct MenuView: View {
         VStack(alignment: .leading, spacing: 0) {
             if store.accounts.isEmpty {
                 empty("Connect Vercel, Cloudflare or GitHub and your menu bar will start answering.", button: "Add a token…")
-            } else if store.projects.isEmpty && store.lastUpdated == nil {
+            } else if store.projects.isEmpty && store.monitoringDegraded {
+                empty("Couldn't check your accounts. Showing no deployment information yet.", button: "Open Settings…")
+            } else if store.projects.isEmpty && store.lastSuccessfulChecks.isEmpty {
                 empty("Checking your deploys…", button: nil)
             } else if store.projects.isEmpty {
                 empty("No projects in your accounts yet. Deploy something and it shows up here.", button: "Open Settings…")
@@ -74,13 +76,6 @@ struct MenuView: View {
                 }
                 .keyboardShortcut("r")
                 .help("Refresh now (⌘R)")
-                if let updated = store.lastUpdated {
-                    TimelineView(.periodic(from: .now, by: 10)) { context in
-                        Text("Updated \(updated.shortAgo(at: context.date))")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                    }
-                }
                 Spacer()
                 Button { openAndClose(URL(string: "https://buymeacoffee.com/someguy")) } label: {
                     Label("Buy me a coffee", systemImage: "cup.and.saucer")
@@ -105,7 +100,7 @@ struct MenuView: View {
     /// Big answer up top: a badge matching the menu bar glyph, the headline, and a one-line summary.
     private var header: some View {
         HStack(spacing: 12) {
-            StatusBadge(state: store.overall)
+            StatusBadge(state: store.monitoringDegraded ? .failed : store.overall)
             VStack(alignment: .leading, spacing: 2) {
                 Text(store.headline).font(.headline)
                 Text(summary).font(.caption).foregroundStyle(.secondary)

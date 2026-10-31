@@ -12,8 +12,10 @@ struct DeployedYetApp: App {
         MenuBarExtra(isInserted: Binding(get: { shows }, set: { if !$0 { store.iconOnlyWhenBusy = true } })) {
             MenuView().environment(store)
         } label: {
-            Image(nsImage: store.morph.map { Glyph.morph(to: $0.to, frame: $0.frame, style: store.iconStyle, color: store.iconColor) }
-                ?? Glyph.image(store.overall, frame: store.wobbleFrame, style: store.iconStyle, color: store.iconColor, fresh: store.freshLanding))
+            Image(nsImage: store.monitoringDegraded
+                ? Glyph.image(.failed, frame: 0, style: store.iconStyle, color: store.iconColor, fresh: false)
+                : (store.morph.map { Glyph.morph(to: $0.to, frame: $0.frame, style: store.iconStyle, color: store.iconColor) }
+                    ?? Glyph.image(store.overall, frame: store.wobbleFrame, style: store.iconStyle, color: store.iconColor, fresh: store.freshLanding)))
                 .accessibilityLabel(store.headline)
         }
         .menuBarExtraStyle(.window)
@@ -183,4 +185,3 @@ enum Glyph {
         return image
     }
 }
-

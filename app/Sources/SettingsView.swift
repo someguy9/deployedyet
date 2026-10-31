@@ -159,11 +159,12 @@ private struct AccountPane: View {
                             .font(.callout)
                             .foregroundStyle(.secondary)
                         let ok = store.errors[account.id] == nil
+                        let checked = store.lastSuccessfulChecks[account.id]
                         HStack(spacing: 5) {
-                            Circle().fill(ok ? Color.green : .red).frame(width: 6, height: 6)
-                            Text(ok ? "Connected" : "Needs attention")
-                            if ok, let checked = store.lastUpdated {
-                                Text("· checked \(checked.formatted(.relative(presentation: .named)))")
+                            Circle().fill(!ok ? Color.red : checked == nil ? .gray : .green).frame(width: 6, height: 6)
+                            Text(!ok ? "Needs attention" : checked == nil ? "Not checked yet" : "Connected")
+                            if let checked {
+                                Text("· last full check \(checked.formatted(.relative(presentation: .named)))")
                             }
                         }
                         .font(.caption)
