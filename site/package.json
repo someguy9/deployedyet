@@ -14,6 +14,7 @@
     "@tailwindcss/vite": "4.3.3",
     "@vgpu/wgsl": "0.6.0",
     "astro": "7.3.8",
+    "micromark": "4.0.3",
     "tailwindcss": "4.3.3",
     "vgpu": "0.6.0"
   },

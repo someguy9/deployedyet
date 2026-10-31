@@ -83,6 +83,8 @@ bun run dev       # http://localhost:4321
 bun run deploy    # build + wrangler deploy
 ```
 
+The website changelog uses public GitHub release notes. Builds fetch the latest 100 releases and fall back to a checked-in snapshot when offline; opening the page refreshes the notes directly from GitHub without credentials, so newly published releases appear without a redeploy. If that request fails or JavaScript is unavailable, the page labels the saved notes and links to GitHub's complete release history.
+
 ## Layout
 
 ```
