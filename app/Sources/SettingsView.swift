@@ -335,6 +335,11 @@ private struct ProjectToggle: View {
     @Environment(Store.self) private var store
     let project: Project
 
+    /// A Cloudflare account can have a Worker and a Pages project with the same name, side by side.
+    private var kind: String? {
+        project.id.hasPrefix("cf-worker:") ? "Worker" : project.id.hasPrefix("cf-pages:") ? "Pages" : nil
+    }
+
     var body: some View {
         Toggle(isOn: Binding(
             get: { store.selected.contains(project.id) },
@@ -344,12 +349,14 @@ private struct ProjectToggle: View {
             }
         )) {
             Text(project.name)
+            let prefix = kind.map { "\($0) · " } ?? ""
             if let last = project.latest.first {
-                Text("Deployed \(last.createdAt.formatted(.relative(presentation: .named)))")
+                Text("\(prefix)Deployed \(last.createdAt.formatted(.relative(presentation: .named)))")
             } else if let pushed = project.activity {
-                Text("Pushed \(pushed.formatted(.relative(presentation: .named)))")
+                Text("\(prefix)Pushed \(pushed.formatted(.relative(presentation: .named)))")
             }
         }
+        .accessibilityLabel(kind.map { "\(project.name), \($0)" } ?? project.name)
         .contextMenu {
             Toggle("Production only", isOn: Binding(
                 get: { store.productionOnly.contains(project.id) },
