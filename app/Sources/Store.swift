@@ -241,7 +241,13 @@ final class Store {
                 let client = account.provider.client(token: token)
                 var result = try await client
                     .projects(account: account, teams: teams ?? Set(picked.map(\.teamID)), discover: teams == nil)
-                if full { result.projects = await autoPick(result.projects, account: account, client: client) }
+                if full && !result.rateLimited {
+                    let picked = await autoPick(result.projects, account: account, client: client)
+                    result.projects = picked.projects
+                    result.unreachable += picked.unreachable
+                    result.rateLimited = picked.rateLimited
+                }
+                if result.rateLimited { backoff[account.id] = .now.addingTimeInterval(60) }
                 let failed = Set(result.unreachable.map(\.id))
                 all += result.projects
                 // Last known for teams we didn't ask or that blipped; the dedupe below keeps fresh copies first.
@@ -280,8 +286,8 @@ final class Store {
     /// Picks projects that appeared since the last full refresh. Vercel and Cloudflare: right away. GitHub: once the
     /// repo has a workflow run, since a token sees every repo and discovery doesn't fetch runs; so new repos get one
     /// runs call per full refresh until they have one, or until they've gone two weeks without a push.
-    private func autoPick(_ fetched: [Project], account: Account, client: any ProviderClient) async -> [Project] {
-        guard known != nil else { return fetched } // refresh() records the first full pass across all accounts
+    private func autoPick(_ fetched: [Project], account: Account, client: any ProviderClient) async -> (projects: [Project], unreachable: [TeamRef], rateLimited: Bool) {
+        guard known != nil else { return (fetched, [], false) } // refresh() records the first full pass across all accounts
         let cutoff = Date.now.addingTimeInterval(-14 * 86_400)
         // Old activity means it isn't new to you, just new to us (a team the token couldn't read before).
         let new = fetched.filter { !known!.contains($0.id) && ($0.lastActive ?? .distantFuture) > cutoff }
@@ -289,20 +295,28 @@ final class Store {
         guard account.provider == .github else {
             known!.formUnion(new.map(\.id))
             selected.formUnion(new.map(\.id))
-            return fetched
+            return (fetched, [], false)
         }
         let unpolled = new.filter { $0.latest.isEmpty }
-        let polled = unpolled.isEmpty ? [] : (try? await client
-            .projects(account: account, teams: Set(unpolled.map(\.teamID)), discover: false).projects) ?? []
-        var withRuns = Dictionary(polled.filter { !$0.latest.isEmpty }.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        var polled: (projects: [Project], unreachable: [TeamRef], rateLimited: Bool) = ([], [], false)
+        if !unpolled.isEmpty {
+            do {
+                polled = try await client.projects(account: account, teams: Set(unpolled.map(\.teamID)), discover: false)
+            } catch {
+                polled.unreachable = unpolled.map { TeamRef(id: $0.teamID, name: $0.name) }
+                polled.rateLimited = (error as? AppError)?.isRateLimit == true
+            }
+        }
+        var withRuns = Dictionary(polled.projects.filter { !$0.latest.isEmpty }.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         for p in new where !p.latest.isEmpty { withRuns[p.id] = p }
         known!.formUnion(withRuns.keys)
         selected.formUnion(withRuns.keys)
-        return fetched.map { p in
+        let projects = fetched.map { p in
             guard var runs = withRuns[p.id] else { return p }
             runs.activity = p.activity // the stub used for polling has no pushed_at
             return runs
         }
+        return (projects, polled.unreachable, polled.rateLimited)
     }
 
     private static func unreachableMessage(_ teams: [TeamRef]) -> String? {
@@ -323,6 +337,7 @@ final class Store {
         guard Keychain.set(token, for: account.id) else { throw AppError.keychain }
         accounts.append(account)
         fullUnreachable[account.id] = result.unreachable
+        if result.rateLimited { backoff[account.id] = .now.addingTimeInterval(60) }
         errors[account.id] = Self.unreachableMessage(result.unreachable)
         let cutoff = Date.now.addingTimeInterval(-14 * 86_400)
         let recent = fetched

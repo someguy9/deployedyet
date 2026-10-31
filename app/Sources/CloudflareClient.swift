@@ -7,7 +7,7 @@ import Foundation
 struct CloudflareClient: ProviderClient {
     let token: String
 
-    func projects(account: Account, teams: Set<String>, discover: Bool) async throws -> (projects: [Project], unreachable: [TeamRef]) {
+    func projects(account: Account, teams: Set<String>, discover: Bool) async throws -> (projects: [Project], unreachable: [TeamRef], rateLimited: Bool) {
         let accounts = try await allAccounts().filter { discover || teams.contains($0.id) }
         // All accounts at once: 18 accounts one by one took ~15s.
         let results = await withTaskGroup(of: (team: TeamRef, projects: [Project], error: Error?).self) { group in
@@ -15,8 +15,9 @@ struct CloudflareClient: ProviderClient {
             return await group.reduce(into: []) { $0.append($1) }
         }
         let failed = results.filter { $0.error != nil }
-        if failed.count == accounts.count, failed.allSatisfy({ $0.projects.isEmpty }), let error = failed.first?.error { throw error }
-        return (results.flatMap(\.projects), failed.map(\.team))
+        let rateLimit = failed.first { ($0.error as? AppError)?.isRateLimit == true }?.error
+        if failed.count == accounts.count, failed.allSatisfy({ $0.projects.isEmpty }), let error = rateLimit ?? failed.first?.error { throw error }
+        return (results.flatMap(\.projects), failed.map(\.team), rateLimit != nil)
     }
 
     /// Workers and Pages for one Cloudflare account. An account can allow Workers but refuse Pages (403),
@@ -39,7 +40,8 @@ struct CloudflareClient: ProviderClient {
                 page += 1
             }
         } catch { errors.append(error) }
-        let transient = errors.first { !(($0 as? AppError)?.isAuth ?? false) }
+        let transient = errors.first { ($0 as? AppError)?.isRateLimit == true }
+            ?? errors.first { !(($0 as? AppError)?.isAuth ?? false) }
         let error = transient ?? (errors.count == 2 ? errors[0] : nil)
         return (TeamRef(id: cf.id, name: cf.name), out, error)
     }
