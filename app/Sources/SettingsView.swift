@@ -16,8 +16,14 @@ struct SettingsView: View {
             sidebar
                 .frame(width: 250)
             Divider()
-            detail
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack(spacing: 0) {
+                if Analytics.shared.needsChoice {
+                    AnalyticsConsentBanner()
+                    Divider()
+                }
+                detail
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
         .frame(minWidth: 820, idealWidth: 860, minHeight: 560, idealHeight: 620)
         .onChange(of: title, initial: true) { _, new in SettingsWindow.setTitle(new) }
@@ -226,6 +232,7 @@ private struct AccountPane: View {
                         Button(picked == projects.count ? "None" : "All") {
                             let ids = projects.map(\.id)
                             if picked == projects.count { store.selected.subtract(ids) } else { store.selected.formUnion(ids) }
+                            Analytics.shared.capture(.projectsChanged)
                         }
                         .buttonStyle(.borderless)
                     }
@@ -268,6 +275,7 @@ private struct ProjectToggle: View {
             get: { store.selected.contains(project.id) },
             set: { on in
                 if on { store.selected.insert(project.id) } else { store.selected.remove(project.id) }
+                Analytics.shared.capture(.projectsChanged)
             }
         )) {
             Text(project.name)
@@ -414,6 +422,7 @@ private struct GeneralPane: View {
                     .onChange(of: launchAtLogin) { _, on in
                         do {
                             try on ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister()
+                            Analytics.shared.capture(.settingChanged(.launchAtLogin, on))
                         } catch {
                             launchAtLogin = SMAppService.mainApp.status == .enabled
                         }
@@ -456,6 +465,10 @@ private struct GeneralPane: View {
                 Text("Click the bell on a building deploy to hear about that one no matter what.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Section("Privacy") {
+                AnalyticsPreferences()
             }
 
             Section {

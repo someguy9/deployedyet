@@ -3,7 +3,9 @@ import Layout from "~/layouts/Layout.astro";
 import { REPO_URL } from "~/lib/site";
 
 const points = [
-  { head: "The app doesn’t collect anything", body: "There’s no account to create, no analytics or crash reporting, and no server of mine for it to send anything to." },
+  { head: "Usage analytics is optional", body: "There’s no account to create and no crash reporting. Usage analytics is on by default in configured release builds. A dismissible in-app notice offers an immediate opt-out; collection can begin before dismissal. Turn off “Share usage analytics” in Settings → General → Privacy at any time. Existing explicit opt-outs are preserved. Unless you opt out, the app sends a small set of usage events directly to PostHog to help measure daily use and improve features. There is no session recording or automatic screen capture." },
+  { head: "Analytics never includes your deploy content", body: "Events include a random installation identifier, event time, app version/build, macOS major version, provider type when you connect or remove an account, feature switches you change, and coarse account/project count ranges. They never include tokens, account labels, project names or IDs, repositories, paths, URLs, branches, commit messages, or error text. The identifier links activity from one installation over time; it is not your account identity." },
+  { head: "You control collection", body: "Turning analytics off cancels pending requests, discards queued events, and removes the identifier from this Mac. It cannot retract requests already received by PostHog or delete previously sent events. Turning it back on creates a new identifier. PostHog receives your network address when your Mac connects, even though the app suppresses IP event properties and disables location enrichment. Builds without a PostHog project token send nothing." },
   { head: "Your tokens stay in your Keychain", body: "They’re stored on this Mac and only sent to the provider they belong to (api.vercel.com, api.cloudflare.com or api.github.com)." },
   { head: "Deploy details are cached on your Mac", body: "The app keeps project names, branches and commit messages on disk so the menu fills in right away. Removing an account deletes its token and clears its projects from that cache." },
   { head: "Push checks only read git’s push log", body: "If you turn on “Check right after I push”, the app watches the folder you pick and reads only the last line of git’s push log there. It never runs git or reads your code." },
@@ -12,11 +14,11 @@ const points = [
 ];
 ---
 
-<Layout title="Privacy | Deployed Yet?" description="What Deployed Yet? does with your data: nothing leaves your Mac except calls to the deploy providers you connect and a daily update check.">
+<Layout title="Privacy | Deployed Yet?" description="Your tokens stay in Keychain. Learn about local deployment data, update checks, and limited usage analytics you can turn off at any time.">
   <main id="main" class="wrap max-w-2xl py-20">
     <a href="/" class="link text-sm text-muted-foreground">Back to Deployed Yet?</a>
     <h1 class="title mt-6">Privacy</h1>
-    <p class="mt-4 text-lg text-muted-foreground">Nothing leaves your Mac except calls to the providers you connect and a daily update check.</p>
+    <p class="mt-4 text-lg text-muted-foreground">Your deployment data stays on your Mac. The app contacts providers you connect and checks for updates. Limited usage analytics is on by default in release builds. Turn it off at any time in General → Privacy.</p>
     <dl class="mt-12 space-y-8">
       {points.map((p) => (
         <div class="border-l border-[var(--color-rule-strong)] pl-5">

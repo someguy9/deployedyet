@@ -362,6 +362,8 @@ struct DeployRow: View {
     }
 
     private func open(_ url: URL?) {
+        guard url != nil else { return }
+        Analytics.shared.capture(.deploymentOpened)
         openAndClose(url)
     }
 

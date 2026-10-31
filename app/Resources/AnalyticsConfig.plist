@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>PostHogProjectToken</key>
+    <string>phc_B3bnauvrWTSvdYb4KgvZuAyFb4vcTu3BtKJyWitnXEwX</string>
+    <key>PostHogHost</key>
+    <string>https://us.i.posthog.com</string>
+    <key>AllowDebugAnalytics</key>
+    <false/>
+</dict>
+</plist>
