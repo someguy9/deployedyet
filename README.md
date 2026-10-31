@@ -68,7 +68,7 @@ That script generates the Xcode project, builds it and launches the app, quittin
 
 `app/Project.swift` signs with my team, so change `DEVELOPMENT_TEAM` to your own team ID before you build (it's in Xcode's Settings, under Accounts). Keeping the signature stable also stops Keychain from asking for permission after every rebuild.
 
-To cut a release, run `app/release.sh`. It builds the universal app signed with Developer ID, packs it into the drag-to-Applications DMG, gets it notarized and stapled, checks that Gatekeeper accepts it, and writes a signed `appcast.xml` for Sparkle. Both land in `app/build/release/`, and both go on the GitHub release. Bump `CFBundleVersion` in `app/Project.swift` every release, since Sparkle only offers a higher build number (the script stops you if you forget). Add `--no-notarize` to try everything except Apple's check.
+To cut a release, run `app/release.sh`. It builds the universal app signed with Developer ID, packs it into the drag-to-Applications DMG, gets it notarized and stapled, checks that Gatekeeper accepts it, and writes a signed `appcast.xml` for Sparkle. Both land in `app/build/release/`, and both go on the GitHub release. Bump `CFBundleVersion` in `app/Project.swift` every release, since Sparkle only offers a higher build number (the script stops you if you forget). The script also stops if it cannot verify the live appcast, including when offline. Add `--no-notarize` to try everything except Apple's check.
 
 ## The website
 

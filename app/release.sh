@@ -51,9 +51,13 @@ tuist xcodebuild build -scheme DeployedYet -configuration Release -derivedDataPa
 VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP/Contents/Info.plist")
 BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$APP/Contents/Info.plist")
 # Sparkle only offers a higher CFBundleVersion, so a release that forgot the bump would never reach anyone.
-LIVE=$(curl -fsL https://github.com/someguy9/deployedyet/releases/latest/download/appcast.xml 2>/dev/null \
-  | sed -n 's/.*<sparkle:version>\([0-9]*\)<.*/\1/p' | head -1 || true) # no appcast yet: nothing to compare
-[[ -z "$LIVE" || "$BUILD" -gt "$LIVE" ]] || fail "CFBundleVersion is $BUILD but the live release is build $LIVE. Bump it in Project.swift."
+[[ "$BUILD" =~ ^[0-9]{1,18}$ ]] || fail "Invalid local CFBundleVersion: $BUILD"
+FEED_XML=$(curl -fsSL --connect-timeout 10 --max-time 30 https://github.com/someguy9/deployedyet/releases/latest/download/appcast.xml) \
+  || fail "Could not download the live appcast; release blocked."
+LIVE=$(printf '%s' "$FEED_XML" | xmllint --nonet --xpath "string((/rss/channel/item)[1]/*[local-name()='version' and namespace-uri()='http://www.andymatuschak.org/xml-namespaces/sparkle'][1])" - 2>/dev/null) \
+  || fail "Could not parse the live appcast; release blocked."
+[[ "$LIVE" =~ ^[0-9]{1,18}$ ]] || fail "Invalid build number in the live appcast; release blocked."
+(( 10#$BUILD > 10#$LIVE )) || fail "CFBundleVersion is $BUILD but the live release is build $LIVE. Bump it in Project.swift."
 
 # Xcode signs Sparkle.framework but leaves its helpers (the installer and updater it launches) with Sparkle's own
 # signature. Re-sign them inside out with ours, then the app, so notarization and library validation pass.
