@@ -1,0 +1,33 @@
+---
+import Layout from "~/layouts/Layout.astro";
+import snapshot from "~/lib/releases-snapshot.json";
+import { fetchReleases, normalizeReleases, renderReleases, RELEASES_URL } from "~/lib/changelog";
+
+let releases = normalizeReleases(snapshot);
+try {
+  releases = await fetchReleases();
+} catch {}
+---
+
+<Layout title="Changelog | Deployed Yet?" description="See what’s new in Deployed Yet?, with release notes from GitHub.">
+  <main id="main" class="wrap max-w-3xl py-20">
+    <a href="/" class="link text-sm text-muted-foreground">Back to Deployed Yet?</a>
+    <h1 class="title mt-6">Changelog</h1>
+    <p class="mt-4 text-lg text-muted-foreground">The latest updates, straight from our GitHub releases.</p>
+    <p class="mt-5 text-sm text-muted-foreground" data-release-status role="status">Showing saved release notes. <a href={RELEASES_URL} class="link-inline">See releases on GitHub</a> for the latest.</p>
+    <div class="mt-12" data-releases set:html={renderReleases(releases)} />
+    <p class="mt-10 text-sm text-muted-foreground">Showing up to the latest 100 releases. <a href={RELEASES_URL} class="link-inline">Browse the full release history on GitHub</a>.</p>
+  </main>
+  <script>
+    import { fetchReleases, renderReleases } from "~/lib/changelog";
+
+    const container = document.querySelector<HTMLElement>("[data-releases]");
+    const status = document.querySelector<HTMLElement>("[data-release-status]");
+    if (container && status) {
+      fetchReleases().then((releases) => {
+        container.innerHTML = renderReleases(releases);
+        status.textContent = "Release notes loaded from GitHub.";
+      }).catch(() => {});
+    }
+  </script>
+</Layout>

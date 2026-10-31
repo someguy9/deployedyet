@@ -1,0 +1,37 @@
+[
+  {
+    "tag_name": "v0.1.4",
+    "published_at": "2026-10-31T13:22:33Z",
+    "body": "## Know when monitoring needs attention\n\n- See a visible monitoring warning when a provider, team, or repository cannot be checked, instead of mistaking cached deployments for a fresh all-clear.\n- Keep your cached deployment rows during provider outages, with an honest last-successful-full-check timestamp in Settings.\n- Refresh performs a full check, clears warnings after recovery, and respects the existing rate-limit cooldown even when only part of an account fails.\n- GitHub discovery and newly discovered repository polling now preserve rate-limit responses too.\n- Recent failed deployments keep headline priority so monitoring warnings do not hide a broken deploy.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.4 (build 5)**\n\nBuilt from merged commit `6f4944c5ebfc906cbff4884e26ef5aff3b474603`. Developer ID signed, Apple-notarized, stapled, and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `80b6d707e13f30df4844e61f7bb0106d2d1aac01267ea0941fa58228f0f515c7`\n\nMonitoring improvements: #2. Partial-response cooldown fix: #3.\n",
+    "draft": false,
+    "prerelease": false
+  },
+  {
+    "tag_name": "v0.1.3",
+    "published_at": "2026-10-27T15:45:04Z",
+    "body": "Fixes a menu row that kept saying 'building' after the deploy had finished.",
+    "draft": false,
+    "prerelease": false
+  },
+  {
+    "tag_name": "v0.1.2",
+    "published_at": "2026-10-27T15:27:33Z",
+    "body": "Updates itself from now on (Sparkle). Checks right after you push or open the menu, mutes failures older than a week, and picks new projects automatically.",
+    "draft": false,
+    "prerelease": false
+  },
+  {
+    "tag_name": "v0.1.1",
+    "published_at": "2026-10-27T14:25:37Z",
+    "body": "Maintenance rebuild of 0.1.0 with the updated release tooling. No changes to the app itself.",
+    "draft": false,
+    "prerelease": false
+  },
+  {
+    "tag_name": "v0.1.0",
+    "published_at": "2026-10-27T13:47:48Z",
+    "body": "**Full Changelog**: https://github.com/someguy9/deployedyet/commits/v0.1.0",
+    "draft": false,
+    "prerelease": false
+  }
+]
