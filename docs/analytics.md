@@ -12,13 +12,15 @@ The bundled production configuration targets the US PostHog project **701132** (
    - `PostHogHost`: `https://us.i.posthog.com` or `https://eu.i.posthog.com`, matching your project region. Other hosts, credentials, query strings, and paths are rejected. Self-hosted PostHog requires explicitly extending validation in `Analytics.Configuration`.
    - `AllowDebugAnalytics`: keep `false` for normal development. Set `true` only while testing against a separate test project; debug events carry `environment=development`.
 3. Run `cd app && tuist generate --no-open`, then build using Xcode or the existing build scripts. Configuration is bundled at build time; changing it requires a rebuild/release.
-4. Launch a configured Release build with **Share usage analytics** enabled by default. Confirm `analytics_enabled` and `analytics_session_started` appear in PostHog's live events, with no identifying payload fields.
+4. Launch a configured Release build with **Share usage analytics** enabled by default. Confirm `analytics_session_started` appears in PostHog's live events, with no identifying payload fields. `analytics_enabled` is only emitted when collection is explicitly re-enabled.
 5. Open the menu/settings, connect an account, and change a setting. Check the corresponding events. Disable analytics, repeat those actions, and confirm no new capture requests are made. Re-enable and confirm a new `distinct_id`.
 6. Restore debug analytics to `false` before shipping and set the production project token. Release builds do not depend on the debug flag. Publish the updated website privacy policy alongside the app release.
 
-No PostHog account/project settings are modified by this implementation. The production capture token is configured; live ingestion still needs verification from a Release build with analytics enabled. No personal API key is needed for ingestion.
+The production capture token is configured and Release ingestion was verified on October 31, 2026. No personal API key is needed for ingestion. The additions below ship in app version 0.1.6 (build 7); the published 0.1.5 release is unchanged.
 
 ## Metrics that answer useful questions
+
+The [Deployed Yet App Usage dashboard](https://us.posthog.com/project/701132/dashboard/2285886) contains verified native insights for engaged DAU, daily running installations, feature adoption, and release adoption. New 0.1.6 events become available after an analytics-enabled installation runs that build and performs the corresponding actions.
 
 Always filter dashboards to `environment=production`. Unique IDs represent **analytics-enabled installations**, not all downloads or uniquely identifiable people. One person with two Macs can count twice; reinstalling/removing preferences or opting out and back in can create another identity. The opt-out rate cannot be measured as a percentage of all users using this client alone: opted-out users send nothing.
 
@@ -55,8 +57,25 @@ All events include `app_version`, `app_build`, `macos_major_version`, `schema_ve
 | `deployment_opened` | User opens a deployment row or its site/project link | None; never the destination URL |
 | `deployment_watch_changed` | User toggles a deployment's notification bell | `enabled` |
 | `refresh_requested` | User manually refreshes | None; automatic polls do not emit it |
+| `project_filter_used` | User starts a nonempty filter (0.1.6+) | None; no query text, length, result contents, or per-keystroke events. Clearing and starting another filter emits again. |
+| `project_group_toggled` | User expands/collapses one group or all groups (0.1.6+) | `expanded`, `scope`: `single` or `all`; no group identity |
+| `projects_bulk_selected` | User selects/deselects a group's matching projects (0.1.6+) | `selected`, `filtered`, `project_count_bucket`: same buckets as daily snapshot; also retains `project_tracking_changed` for compatibility |
+| `update_check_requested` | User manually checks for updates (0.1.6+) | None; scheduled checks do not emit it |
 
-Instrumented settings: preview tracking, failed/ready notifications, push watching, icon animation, icon-only-when-busy, per-project production-only, and launch-at-login (only after registration succeeds). Appearance choice values, token errors, notification delivery, automatic provider requests, and git activity are deliberately not captured.
+Instrumented settings: preview tracking, failed/ready notifications, push watching, icon animation, icon-only-when-busy, per-project production-only, launch-at-login (only after registration succeeds), and automatic updates (0.1.6+, user changes only, not restored startup preferences). Appearance choice values, token errors, notification delivery, automatic provider requests, and git activity are deliberately not captured.
+
+Use the new events to evaluate whether large project lists need better navigation, whether bulk selection is useful, and whether update controls are discoverable. All additions originate in explicit user actions and therefore qualify for engaged DAU. They do not add background polling or change opt-out behavior.
+
+### Turn signals into product decisions
+
+| Product question | Signal to review | Possible follow-up |
+| --- | --- | --- |
+| Do installations keep getting value? | Engaged DAU and return activity on later days, separately from daily running | Investigate onboarding and recurring value, not just launch counts |
+| Are project lists cumbersome? | Unique installations using filters, collapse controls, and filtered bulk selection | Improve navigation; usage alone does not prove friction |
+| Is bulk selection worth improving? | Unique installations using bulk selection, split by selected/filtered and count bucket | Prioritize large-list workflows without identifying projects |
+| Are update controls useful? | Manual update checks, automatic-update preference changes, and version adoption | Improve update discoverability; a check is not a successful install |
+
+Compare adoption only across versions that emit the relevant events. Prefer unique installations over raw click totals, use consistent time windows, and combine these signals with user feedback before deciding what to build. These are derived, noncanonical metrics; anonymous installations are not verified people, and opted-out usage is absent.
 
 ## Delivery and privacy boundaries
 

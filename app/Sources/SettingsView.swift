@@ -205,6 +205,11 @@ private struct AccountPane: View {
                         TextField("Filter", text: $query, prompt: Text("Filter \(all.count) projects"))
                             .labelsHidden()
                             .textFieldStyle(.plain)
+                            .onChange(of: query) { previous, current in
+                                if previous.isEmpty && !current.isEmpty {
+                                    Analytics.shared.capture(.projectFilterUsed)
+                                }
+                            }
                         if !query.isEmpty {
                             Button { query = "" } label: { Image(systemName: "xmark.circle.fill") }
                                 .buttonStyle(.borderless)
@@ -226,9 +231,11 @@ private struct AccountPane: View {
                 HStack {
                     Button("Collapse All") {
                         saveCollapsedGroups(collapsedGroups.union(teams.map { groupKey($0.id) }))
+                        Analytics.shared.capture(.projectGroupToggled(expanded: false, scope: .all))
                     }
                     Button("Expand All") {
                         saveCollapsedGroups(collapsedGroups.subtracting(teams.map { groupKey($0.id) }))
+                        Analytics.shared.capture(.projectGroupToggled(expanded: true, scope: .all))
                     }
                     Spacer()
                 }
@@ -250,6 +257,7 @@ private struct AccountPane: View {
                             var collapsed = collapsedGroups
                             if collapsed.contains(key) { collapsed.remove(key) } else { collapsed.insert(key) }
                             saveCollapsedGroups(collapsed)
+                            Analytics.shared.capture(.projectGroupToggled(expanded: !expanded, scope: .single))
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: expanded ? "chevron.down" : "chevron.right")
@@ -270,6 +278,8 @@ private struct AccountPane: View {
                             let ids = projects.map(\.id)
                             if picked == projects.count { store.selected.subtract(ids) } else { store.selected.formUnion(ids) }
                             Analytics.shared.capture(.projectsChanged)
+                            Analytics.shared.capture(.projectsBulkSelected(selected: picked != projects.count,
+                                                                           filtered: !query.isEmpty, count: ids.count))
                         }
                         .buttonStyle(.borderless)
                         .accessibilityLabel("\(picked == projects.count ? "Deselect" : "Select") all\(query.isEmpty ? "" : " matching") projects in \(team.name)")
@@ -539,7 +549,14 @@ private struct GeneralPane: View {
                     }
                 }
                 .padding(.vertical, 4)
-                Toggle(isOn: $updater.automatic) {
+                Toggle(isOn: Binding(
+                    get: { updater.automatic },
+                    set: { enabled in
+                        guard updater.automatic != enabled else { return }
+                        updater.automatic = enabled
+                        Analytics.shared.capture(.settingChanged(.automaticUpdates, enabled))
+                    }
+                )) {
                     Text("Install updates automatically")
                     Text("Checks GitHub once a day and swaps in the new version while nothing is building.")
                 }
