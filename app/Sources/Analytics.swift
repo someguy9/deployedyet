@@ -18,6 +18,11 @@ final class Analytics {
         case iconOnlyWhenBusy = "icon_only_when_busy"
         case productionOnly = "production_only"
         case launchAtLogin = "launch_at_login"
+        case automaticUpdates = "automatic_updates"
+    }
+
+    enum GroupScope: String {
+        case single, all
     }
 
     enum Event {
@@ -26,6 +31,10 @@ final class Analytics {
         case accountConnectionFailed(Provider), accountRemoved(Provider)
         case projectsChanged, deploymentWatchChanged(Bool)
         case settingChanged(Setting, Bool)
+        case projectFilterUsed
+        case projectGroupToggled(expanded: Bool, scope: GroupScope)
+        case projectsBulkSelected(selected: Bool, filtered: Bool, count: Int)
+        case updateCheckRequested
 
         var name: String {
             switch self {
@@ -40,6 +49,10 @@ final class Analytics {
             case .projectsChanged: "project_tracking_changed"
             case .deploymentWatchChanged: "deployment_watch_changed"
             case .settingChanged: "setting_changed"
+            case .projectFilterUsed: "project_filter_used"
+            case .projectGroupToggled: "project_group_toggled"
+            case .projectsBulkSelected: "projects_bulk_selected"
+            case .updateCheckRequested: "update_check_requested"
             }
         }
 
@@ -50,6 +63,10 @@ final class Analytics {
                 ["provider": provider.rawValue]
             case .deploymentWatchChanged(let enabled): ["enabled": enabled]
             case .settingChanged(let setting, let enabled): ["setting": setting.rawValue, "enabled": enabled]
+            case .projectGroupToggled(let expanded, let scope):
+                ["expanded": expanded, "scope": scope.rawValue]
+            case .projectsBulkSelected(let selected, let filtered, let count):
+                ["selected": selected, "filtered": filtered, "project_count_bucket": Analytics.bucket(count)]
             default: [:]
             }
         }
@@ -280,7 +297,7 @@ final class Analytics {
         String(ISO8601DateFormatter().string(from: .now).prefix(10))
     }
 
-    private static func bucket(_ count: Int) -> String {
+    nonisolated private static func bucket(_ count: Int) -> String {
         switch count {
         case ...0: "0"
         case 1: "1"

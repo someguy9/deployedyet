@@ -16,8 +16,8 @@ let project = Project(
                 "LSUIElement": true,
                 "LSApplicationCategoryType": "public.app-category.developer-tools",
                 "CFBundleDisplayName": "Deployed Yet?",
-                "CFBundleShortVersionString": "0.1.5",
-                "CFBundleVersion": "6", // Sparkle compares this one: bump it every release
+                "CFBundleShortVersionString": "0.1.6",
+                "CFBundleVersion": "7", // Sparkle compares this one: bump it every release
                 // Updates: Sparkle reads the appcast attached to the newest GitHub release (release.sh makes it).
                 "SUFeedURL": "https://github.com/someguy9/deployedyet/releases/latest/download/appcast.xml",
                 "SUPublicEDKey": "i8vRR31daZXNtM/cs9W+/X0GG+L56WXwrsHIV+2hAJc=", // private half: login Keychain, account "deployedyet"

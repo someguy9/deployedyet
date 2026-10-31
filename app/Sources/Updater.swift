@@ -32,6 +32,8 @@ final class Updater: NSObject, SPUUpdaterDelegate, SPUStandardUserDriverDelegate
     }
 
     func checkNow() {
+        guard canCheck else { return }
+        Analytics.shared.capture(.updateCheckRequested)
         controller.checkForUpdates(nil)
     }
 
