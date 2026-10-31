@@ -16,8 +16,14 @@ struct SettingsView: View {
             sidebar
                 .frame(width: 250)
             Divider()
-            detail
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack(spacing: 0) {
+                if Analytics.shared.needsChoice {
+                    AnalyticsConsentBanner()
+                    Divider()
+                }
+                detail
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
         .frame(minWidth: 820, idealWidth: 860, minHeight: 560, idealHeight: 620)
         .onChange(of: title, initial: true) { _, new in SettingsWindow.setTitle(new) }
@@ -125,13 +131,14 @@ private struct AccountPane: View {
     let account: Account
     let onRemove: () -> Void
     @State private var query = ""
+    @AppStorage("settings.collapsedProjectGroups") private var collapsedGroupsJSON = "[]"
     @State private var confirmRemove = false
     @State private var checking = false // only a refresh asked for here spins; background polls would flicker it
 
     var body: some View {
         let all = store.projects.filter { $0.accountID == account.id }
         let shown = all
-            .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
+            .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) || $0.team.localizedCaseInsensitiveContains(query) }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         let teams = Dictionary(grouping: shown, by: \.group) // id, not name: two teams can share a name
             .map { (id: $0.key, name: $0.value[0].team, projects: $0.value) }
@@ -211,23 +218,62 @@ private struct AccountPane: View {
             if all.isEmpty {
                 Text(store.errors[account.id] == nil ? "No projects yet." : "Couldn't load projects.")
                     .foregroundStyle(.secondary)
+            } else if shown.isEmpty {
+                ContentUnavailableView.search(text: query)
+            }
+
+            if !teams.isEmpty && query.isEmpty {
+                HStack {
+                    Button("Collapse All") {
+                        saveCollapsedGroups(collapsedGroups.union(teams.map { groupKey($0.id) }))
+                    }
+                    Button("Expand All") {
+                        saveCollapsedGroups(collapsedGroups.subtracting(teams.map { groupKey($0.id) }))
+                    }
+                    Spacer()
+                }
+                .buttonStyle(.borderless)
             }
 
             ForEach(teams, id: \.id) { team in
                 let projects = team.projects
+                let expanded = !query.isEmpty || !collapsedGroups.contains(groupKey(team.id))
                 Section {
-                    ForEach(projects) { ProjectToggle(project: $0) }
+                    if expanded {
+                        ForEach(projects) { ProjectToggle(project: $0) }
+                    }
                 } header: {
                     let picked = projects.filter { store.selected.contains($0.id) }.count
                     HStack {
-                        Text(team.name)
-                        Text("\(picked) of \(projects.count)").foregroundStyle(.secondary)
+                        Button {
+                            let key = groupKey(team.id)
+                            var collapsed = collapsedGroups
+                            if collapsed.contains(key) { collapsed.remove(key) } else { collapsed.insert(key) }
+                            saveCollapsedGroups(collapsed)
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: expanded ? "chevron.down" : "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .frame(width: 12)
+                                Text(team.name)
+                                Text("\(picked) of \(projects.count)").foregroundStyle(.secondary)
+                            }
+                            .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!query.isEmpty)
+                        .accessibilityLabel("\(team.name), \(picked) of \(projects.count) projects picked")
+                        .accessibilityValue(expanded ? "Expanded" : "Collapsed")
+                        .help(query.isEmpty ? "\(expanded ? "Collapse" : "Expand") projects" : "Matching groups stay expanded while filtering")
                         Spacer()
-                        Button(picked == projects.count ? "None" : "All") {
+                        Button(picked == projects.count ? (query.isEmpty ? "None" : "None matching") : (query.isEmpty ? "All" : "All matching")) {
                             let ids = projects.map(\.id)
                             if picked == projects.count { store.selected.subtract(ids) } else { store.selected.formUnion(ids) }
+                            Analytics.shared.capture(.projectsChanged)
                         }
                         .buttonStyle(.borderless)
+                        .accessibilityLabel("\(picked == projects.count ? "Deselect" : "Select") all\(query.isEmpty ? "" : " matching") projects in \(team.name)")
+                        .help(query.isEmpty ? "Change all projects in this group" : "Change only matching projects in this group")
                     }
                 }
             }
@@ -257,6 +303,22 @@ private struct AccountPane: View {
             Text("The token is deleted from Keychain. You can add it again any time.")
         }
     }
+
+    private var collapsedGroups: Set<String> {
+        guard let data = collapsedGroupsJSON.data(using: .utf8),
+              let groups = try? JSONDecoder().decode([String].self, from: data) else { return [] }
+        return Set(groups)
+    }
+
+    private func groupKey(_ groupID: String) -> String {
+        "\(account.id.uuidString):\(groupID)"
+    }
+
+    private func saveCollapsedGroups(_ groups: Set<String>) {
+        guard let data = try? JSONEncoder().encode(groups.sorted()),
+              let json = String(data: data, encoding: .utf8) else { return }
+        collapsedGroupsJSON = json
+    }
 }
 
 private struct ProjectToggle: View {
@@ -268,6 +330,7 @@ private struct ProjectToggle: View {
             get: { store.selected.contains(project.id) },
             set: { on in
                 if on { store.selected.insert(project.id) } else { store.selected.remove(project.id) }
+                Analytics.shared.capture(.projectsChanged)
             }
         )) {
             Text(project.name)
@@ -414,6 +477,7 @@ private struct GeneralPane: View {
                     .onChange(of: launchAtLogin) { _, on in
                         do {
                             try on ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister()
+                            Analytics.shared.capture(.settingChanged(.launchAtLogin, on))
                         } catch {
                             launchAtLogin = SMAppService.mainApp.status == .enabled
                         }
@@ -456,6 +520,10 @@ private struct GeneralPane: View {
                 Text("Click the bell on a building deploy to hear about that one no matter what.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Section("Privacy") {
+                AnalyticsPreferences()
             }
 
             Section {

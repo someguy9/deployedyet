@@ -27,7 +27,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = Store()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Analytics.shared.start { [weak store] in
+            .init(accounts: store?.accounts.count ?? 0, projects: store?.selected.count ?? 0)
+        }
         Updater.shared.start(store: store)
+        for (name, sleeping) in [(NSWorkspace.willSleepNotification, true), (NSWorkspace.didWakeNotification, false)] {
+            NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { _ in
+                MainActor.assumeIsolated { Analytics.shared.setSleeping(sleeping) }
+            }
+        }
         // The MenuBarExtra's window is a panel and is key while the menu is open (Settings is a plain window).
         let center = NotificationCenter.default
         center.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main) { [store] note in
@@ -50,6 +58,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SettingsWindow.show(store)
         return false
     }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        Analytics.shared.stop()
+    }
 }
 
 /// Settings in a plain AppKit window, so anything (first run, reopen, the menu) can open it.
@@ -59,6 +71,7 @@ enum SettingsWindow {
     private static var window: NSWindow?
 
     static func show(_ store: Store) {
+        Analytics.shared.capture(.settingsOpened)
         if window == nil {
             let host = NSHostingController(rootView: SettingsView().environment(store))
             let w = NSWindow(contentViewController: host)

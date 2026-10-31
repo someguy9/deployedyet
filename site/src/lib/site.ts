@@ -52,6 +52,11 @@ export const features: Feature[] = [
     body: "The menu bar icon answers the question in the name. It wobbles while anything builds and morphs into the answer when it lands.",
   },
   {
+    tag: "Find",
+    title: "Find the deployment you need",
+    body: "Search tracked rows by project, team, account, branch, commit, message or provider. Combine provider and state filters, see the matching count, and clear them whenever you like.",
+  },
+  {
     tag: "Details",
     title: "Keep an eye on one build",
     body: "Building rows show a live timer. Click the bell on one and you’ll get a notification when it’s done, even if you’ve turned the others off.",

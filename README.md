@@ -23,6 +23,8 @@
 - Add as many Vercel, Cloudflare (Workers and Pages) and GitHub Actions accounts as you have, then pick which projects to watch.
 - The menu bar shows `?` while something is building, `✓` once it's live and `!` if it broke. It turns amber while building, green for a few minutes after a deploy lands, and red while anything is failing. There are six icon styles, and you can hide the icon until something needs you.
 - Failed deploys sit at the top of the menu, then anything still building, then the rest by date. Each row shows the branch, short commit and build time.
+- Search tracked deployment rows by project, team, account, branch, commit, message or provider, and combine provider and state filters. Clear resets them; the menu shows the matching count while the headline and monitoring warnings stay global.
+- Collapse project groups in Settings to keep large accounts manageable, or collapse and expand all groups at once. Search reveals matching groups without losing your saved collapsed state.
 - You can get a notification when a deploy fails or production goes live. Click the bell on a single build to hear when that one finishes.
 - It checks every 5 seconds while something is building and once a minute otherwise. When it gets rate limited it backs off, and it catches up when your Mac wakes. Opening the menu checks right away, and if you turn on "Check right after I push", a push from your Mac shows up within seconds.
 
@@ -48,7 +50,9 @@ The app only reads, so give each token the smallest set of permissions it'll acc
 
 Tokens live in your Mac's Keychain, on this device only. They never get written anywhere else or logged, and they're only sent to `api.vercel.com`, `api.cloudflare.com` or `api.github.com` over HTTPS. Removing an account deletes its token.
 
-To make the menu fill in instantly, the app caches project names, branches and commit messages in `~/Library/Application Support/DeployedYet/`. There's no account to sign up for, no analytics or crash reporting, and no server of mine involved.
+To make the menu fill in instantly, the app caches project names, branches and commit messages in `~/Library/Application Support/DeployedYet/`. There's no account to sign up for and no crash reporting. Optional usage analytics is **on by default** in configured release builds and can be disabled in Settings → General → Privacy. Unless you opt out, with a configured build, the app sends a small allowlist of usage events directly to PostHog, using a random installation identifier rather than your account identity. Tokens, project names, repositories, paths, URLs, branches, commit messages, and error text never enter analytics. Turning analytics off discards queued events and removes the local identifier; already-sent events remain in PostHog. PostHog necessarily sees the network address of incoming requests; the app disables location enrichment.
+
+See [Analytics setup](docs/analytics.md) for project configuration, the event catalog, and DAU/retention dashboard recipes. The production capture token is configured. Debug analytics is disabled.
 
 "Check right after I push" is off until you pick a folder. It watches that folder for git pushes by reading only the last line of git's push log (`.git/logs/refs/remotes/`). It never runs git, never reads your code, and sends nothing anywhere; a push just makes the app check sooner.
 

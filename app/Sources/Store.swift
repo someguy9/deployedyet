@@ -25,12 +25,19 @@ final class Store {
     var trackPreviews: Bool {
         didSet {
             UserDefaults.standard.set(trackPreviews, forKey: "trackPreviews")
+            if trackPreviews != oldValue { Analytics.shared.capture(.settingChanged(.trackPreviews, trackPreviews)) }
             forgetSeen()
             updateWobble()
         }
     }
-    var notifyFailed: Bool { didSet { UserDefaults.standard.set(notifyFailed, forKey: "notifyFailed") } }
-    var notifyReady: Bool { didSet { UserDefaults.standard.set(notifyReady, forKey: "notifyReady") } }
+    var notifyFailed: Bool { didSet {
+        UserDefaults.standard.set(notifyFailed, forKey: "notifyFailed")
+        if notifyFailed != oldValue { Analytics.shared.capture(.settingChanged(.notifyFailed, notifyFailed)) }
+    } }
+    var notifyReady: Bool { didSet {
+        UserDefaults.standard.set(notifyReady, forKey: "notifyReady")
+        if notifyReady != oldValue { Analytics.shared.capture(.settingChanged(.notifyReady, notifyReady)) }
+    } }
     var watched: Set<String> = []
     private(set) var projects: [Project] = []
     private(set) var errors: [UUID: String] = [:]
@@ -47,15 +54,26 @@ final class Store {
     var iconColor: IconColor { didSet { UserDefaults.standard.set(iconColor.rawValue, forKey: "iconColor") } }
     var iconStyle: IconStyle { didSet { UserDefaults.standard.set(iconStyle.rawValue, forKey: "iconStyle") } }
     /// The ? rocks while building and morphs into the answer; off keeps the icon still.
-    var animateIcon: Bool { didSet { UserDefaults.standard.set(animateIcon, forKey: "animateIcon"); updateWobble() } }
+    var animateIcon: Bool { didSet {
+        UserDefaults.standard.set(animateIcon, forKey: "animateIcon")
+        if animateIcon != oldValue { Analytics.shared.capture(.settingChanged(.animateIcon, animateIcon)) }
+        updateWobble()
+    } }
     /// Show the menu bar icon only while something needs a look.
-    var iconOnlyWhenBusy: Bool { didSet { UserDefaults.standard.set(iconOnlyWhenBusy, forKey: "iconOnlyWhenBusy") } }
+    var iconOnlyWhenBusy: Bool { didSet {
+        UserDefaults.standard.set(iconOnlyWhenBusy, forKey: "iconOnlyWhenBusy")
+        if iconOnlyWhenBusy != oldValue { Analytics.shared.capture(.settingChanged(.iconOnlyWhenBusy, iconOnlyWhenBusy)) }
+    } }
     /// Keeps a hidden-when-idle icon around for a few seconds after a build lands, so the ✓ / ! is seen.
     private(set) var justLanded = false
     /// The menu panel is open; a hidden-when-idle icon must not vanish from under it.
     var menuOpen = false { didSet { if menuOpen && !oldValue { menuDidOpen() } } }
     /// Opt-in: watch a folder of git repos and check right after a push (see PushWatcher).
-    var watchPushes: Bool { didSet { UserDefaults.standard.set(watchPushes, forKey: "watchPushes"); updatePushWatcher() } }
+    var watchPushes: Bool { didSet {
+        UserDefaults.standard.set(watchPushes, forKey: "watchPushes")
+        if watchPushes != oldValue { Analytics.shared.capture(.settingChanged(.watchPushes, watchPushes)) }
+        updatePushWatcher()
+    } }
     var pushFolder: String? { didSet { UserDefaults.standard.set(pushFolder, forKey: "pushFolder"); updatePushWatcher() } }
     private var pushWatcher: PushWatcher?
     /// After a push: check every 5s for a minute, or until the new build shows up.
@@ -182,6 +200,7 @@ final class Store {
 
     /// Opening the menu shows current data: if it's more than a few seconds old, look now at every picked project.
     private func menuDidOpen() {
+        Analytics.shared.capture(.menuOpened)
         guard !refreshing, lastAttempt.map({ Date.now.timeIntervalSince($0) > 10 }) ?? true else { return }
         lastPicked = nil
         wakePolling()
@@ -200,6 +219,7 @@ final class Store {
     }
 
     func refreshNow() async {
+        Analytics.shared.capture(.refreshRequested)
         lastPicked = nil
         await refresh(full: true)
     }
@@ -329,6 +349,11 @@ final class Store {
 
     @discardableResult
     func addAccount(provider: Provider, label: String, token: String) async throws -> Account {
+        Analytics.shared.capture(.accountConnectionStarted(provider))
+        var connected = false
+        defer {
+            if !connected { Analytics.shared.capture(.accountConnectionFailed(provider)) }
+        }
         let client = provider.client(token: token)
         let label = label.isEmpty ? ((try? await client.suggestedLabel()) ?? provider.name) : label
         let account = Account(label: label, provider: provider)
@@ -352,10 +377,13 @@ final class Store {
             lastPicked = nil
             Task { await refresh() }
         }
+        connected = true
+        Analytics.shared.capture(.accountConnected(provider))
         return account
     }
 
     func removeAccount(_ account: Account) {
+        Analytics.shared.capture(.accountRemoved(account.provider))
         Keychain.delete(account.id)
         backoff[account.id] = nil
         fullUnreachable[account.id] = nil
@@ -383,15 +411,18 @@ final class Store {
 
     func toggleWatch(_ deployID: String) {
         if watched.remove(deployID) == nil { watched.insert(deployID) }
+        Analytics.shared.capture(.deploymentWatchChanged(watched.contains(deployID)))
     }
 
     func toggleProductionOnly(_ projectID: String) {
         if productionOnly.remove(projectID) == nil { productionOnly.insert(projectID) }
+        Analytics.shared.capture(.settingChanged(.productionOnly, productionOnly.contains(projectID)))
         updateWobble()
     }
 
     func untrack(_ projectID: String) {
         selected.remove(projectID)
+        Analytics.shared.capture(.projectsChanged)
         updateWobble()
     }
 
