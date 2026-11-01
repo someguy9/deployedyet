@@ -45,7 +45,7 @@ The app only reads, so give each token the smallest set of permissions it'll acc
 | Provider | Token | Permissions |
 | --- | --- | --- |
 | Vercel | [Account token](https://vercel.com/account/tokens) | Vercel has no read-only tokens yet. Make one per team and give it an expiry date. |
-| Cloudflare | [Custom API token](https://dash.cloudflare.com/profile/api-tokens) | Read on Account Settings, Workers Scripts and Cloudflare Pages |
+| Cloudflare | [Custom API token](https://dash.cloudflare.com/profile/api-tokens) | Read on Account Settings, Workers Scripts, Workers Builds Configuration (git builds) and Cloudflare Pages |
 | GitHub | [Fine-grained token](https://github.com/settings/personal-access-tokens/new) | Read on Actions and Metadata, for the repos you deploy from |
 
 Tokens live in your Mac's Keychain, on this device only. They never get written anywhere else or logged, and they're only sent to `api.vercel.com`, `api.cloudflare.com` or `api.github.com` over HTTPS. Removing an account deletes its token.

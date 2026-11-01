@@ -1,9 +1,9 @@
 import Foundation
 
 /// Workers + Pages across every Cloudflare account the token can see.
-/// Per account: one `/workers/scripts` call (all Workers, last deploy time) plus paged `/pages/projects`
-/// (each project's latest and production deploy with build stage).
-// ponytail: Workers Builds (git CI for Workers) not read yet. It needs a user token with Builds scope, add when someone uses it.
+/// Per account: one `/workers/scripts` call (all Workers, last deploy time), each Worker's latest
+/// Workers Build (git CI, 20 Workers per call), plus paged `/pages/projects` (each project's latest and
+/// production deploy with build stage).
 struct CloudflareClient: ProviderClient {
     let token: String
 
@@ -28,7 +28,19 @@ struct CloudflareClient: ProviderClient {
         var errors: [Error] = []
         do {
             let scripts: Envelope<[Script]> = try await get("/accounts/\(cf.id)/workers/scripts", [:])
-            out += scripts.result.map { $0.project(cf: cf, account: account) }
+            var builds: [String: Build] = [:]
+            do {
+                // ponytail: chunks run one after another; a task group if an account has hundreds of Workers.
+                let tags = scripts.result.compactMap(\.tag)
+                for start in stride(from: 0, to: tags.count, by: 20) {
+                    let ids = tags[start..<min(start + 20, tags.count)].joined(separator: ",")
+                    let latest: Envelope<LatestBuilds> = try await get("/accounts/\(cf.id)/builds/builds/latest", ["external_script_ids": ids])
+                    builds.merge(latest.result.builds ?? [:]) { a, _ in a }
+                }
+            } catch AppError.http(let code, _) where code < 500 && code != 429 {
+                // Token without Workers Builds Configuration: Read (the API docs call it Workers CI Read). Workers still show, just without git builds.
+            } catch { errors.append(error) } // a blip: keep last-known rather than flash the wrangler row
+            out += scripts.result.map { $0.project(cf: cf, account: account, build: $0.tag.flatMap { builds[$0] }) }
         } catch { errors.append(error) }
         do {
             var page = 1
@@ -93,13 +105,14 @@ private func date(_ string: String?) -> Date? {
 
 private struct Script: Decodable {
     let id: String // the Worker name
+    let tag: String? // what Workers Builds calls external_script_id
     let modified_on: String?
     let etag: String?
     let last_deployed_from: String?
     let routes: [Route]?
     struct Route: Decodable { let pattern: String }
 
-    func project(cf: CFAccount, account: Account) -> Project {
+    func project(cf: CFAccount, account: Account, build: Build?) -> Project {
         let projectID = "cf-worker:\(cf.id):\(id)"
         let deployed = date(modified_on) ?? .distantPast
         // Route patterns look like "example.com/path*"; good enough for an "Open site" link.
@@ -132,7 +145,66 @@ private struct Script: Decodable {
             projectURL: dashboard,
             isManual: true
         )
-        return Project(id: projectID, name: id, accountID: account.id, teamID: cf.id, team: cf.name, latest: [deploy])
+        guard let build, let uuid = build.build_uuid, let created = date(build.created_on) else {
+            return Project(id: projectID, name: id, accountID: account.id, teamID: cf.id, team: cf.name, latest: [deploy])
+        }
+        let meta = build.build_trigger_metadata
+        // Non-production branches run `wrangler versions upload`: a preview, the live script doesn't move.
+        let isProduction = !(meta?.deploy_command ?? "").contains("versions upload")
+        let state: DeployState = switch (build.status, build.build_outcome) {
+        case ("stopped", "success"): .ready
+        case ("stopped", "fail"), ("stopped", "terminated"): .failed
+        case ("stopped", _): .canceled // cancelled, skipped
+        default: .building // queued, initializing, running
+        }
+        let started = date(build.running_on) ?? date(build.initializing_on) ?? created
+        let stopped = date(build.stopped_on)
+        let built = Deploy(
+            id: uuid,
+            provider: .cloudflare,
+            projectID: projectID,
+            projectName: id,
+            accountLabel: account.label,
+            team: cf.name,
+            state: state,
+            isProduction: isProduction,
+            branch: meta?.branch,
+            message: meta?.commit_message,
+            createdAt: created,
+            startedAt: started,
+            duration: state == .ready ? stopped.map { $0.timeIntervalSince(started) }.flatMap { $0 > 0 ? $0 : nil } : nil,
+            url: URL(string: "https://dash.cloudflare.com/\(cf.id)/workers/services/view/\(id)/production/builds/\(uuid)"),
+            siteURL: site,
+            projectURL: dashboard,
+            commit: meta?.commit_hash
+        )
+        // The build's own `wrangler deploy` moves the script mid-build. That script change is this build, not
+        // a separate "Deployed with wrangler", so hide it; a wrangler deploy after the build ends still shows.
+        // ponytail: 60s slack between the build's deploy step and stopped_on; widen if Cloudflare lags more.
+        let fromBuild = isProduction && deployed >= created && (stopped.map { deployed <= $0.addingTimeInterval(60) } ?? true)
+        let latest = (fromBuild ? [built] : [built, deploy]).sorted { $0.createdAt > $1.createdAt }
+        return Project(id: projectID, name: id, accountID: account.id, teamID: cf.id, team: cf.name, latest: latest)
+    }
+}
+
+private struct LatestBuilds: Decodable {
+    let builds: [String: Build]? // keyed by script tag
+}
+
+private struct Build: Decodable {
+    let build_uuid: String?
+    let status: String? // queued, initializing, running, stopped
+    let build_outcome: String? // success, fail, skipped, cancelled, terminated (once stopped)
+    let created_on: String?
+    let initializing_on: String?
+    let running_on: String?
+    let stopped_on: String?
+    let build_trigger_metadata: Metadata?
+    struct Metadata: Decodable {
+        let branch: String?
+        let commit_hash: String?
+        let commit_message: String?
+        let deploy_command: String?
     }
 }
 

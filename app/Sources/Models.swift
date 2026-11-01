@@ -42,7 +42,7 @@ enum Provider: String, Codable, CaseIterable {
         switch self {
         // Vercel tokens can't be read-only (only scoped to a team or project), so say so and recommend the safest shape.
         case .vercel: "Vercel tokens can't be read-only yet, so scope each one to a single team and give it an expiration. Add one token per team; Deployed Yet? only ever reads."
-        case .cloudflare: "Create a custom token with Account Settings: Read, Workers Scripts: Read and Cloudflare Pages: Read, for all accounts you want to watch."
+        case .cloudflare: "Create a custom token with Account Settings: Read, Workers Scripts: Read, Workers Builds Configuration: Read (for git builds) and Cloudflare Pages: Read, for all accounts you want to watch."
         case .github: "Create a fine-grained token with Actions: Read and Metadata: Read on the repos you deploy from."
         }
     }
