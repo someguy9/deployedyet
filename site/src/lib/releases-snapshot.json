@@ -1,5 +1,12 @@
 [
   {
+    "tag_name": "v0.1.9",
+    "published_at": "2026-11-01T21:25:29Z",
+    "body": "## Keep concurrent builds in sight\n\n- Each tracked project now shows its newest deployment **and any older deployments still building**. A newer deploy no longer hides a build you are waiting on.\n- Search and filter individual deployment rows, and watch any in-progress build until it finishes. Finished older builds leave the list automatically.\n- The header counts distinct projects, while filters count deployment rows, so concurrent builds do not inflate your project count.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.9 (build 10)**\n\nBuilt from merged commit `b63fa5b3a170913911a3712467024144f7ea4a10` on `main`. Developer ID signed, Apple-notarized, stapled, and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `f69b6dfa7efd5e6acc894d8dae1bce9fe34d9e9d56129f72269fc754dd6f75cf`\n\nChanges: https://github.com/someguy9/deployedyet/pull/8\n",
+    "draft": false,
+    "prerelease": false
+  },
+  {
     "tag_name": "v0.1.8",
     "published_at": "2026-11-01T16:43:37Z",
     "body": "## See Cloudflare Workers Builds\n\n- Workers that deploy from git (Workers Builds) now show the build while it runs, then **Ready** or **Failed**, with the branch, commit and message. Before, a push only showed up once it was already live, as \"Deployed with wrangler\".\n- A push notifies once. The wrangler deploy that a build runs for you is folded into the build; a wrangler deploy of your own after the build still shows on its own.\n- Builds from non-production branches count as previews, like Pages and Vercel previews.\n- Add **Workers Builds Configuration: Read** to your Cloudflare token to turn this on (edit it at dash.cloudflare.com/profile/api-tokens; the token itself doesn't change). Without it, Workers show exactly as before.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.8 (build 9)**\n\nBuilt from commit `703e1caaff92ff5526606b58298b07b6d637b08c` on `main`. Developer ID signed, Apple-notarized, stapled, and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `115ec272e3a012f0a1f85e5fe1a522e2c044271a7605b2e3c8a216769be1836b`\n",
