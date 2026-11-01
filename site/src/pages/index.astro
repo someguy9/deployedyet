@@ -16,7 +16,7 @@ const version = await fetch("https://api.github.com/repos/someguy9/deployedyet/r
 const [, ...details] = features;
 
 const tour = [
-  { head: "Broken stuff goes to the top", body: "Failed deploys first, then anything still building, then the rest by date." },
+  { head: "Broken stuff goes to the top", body: "See each project's newest deploy and any older builds still running. Failed deploys come first, then builds, then the rest by date." },
   { head: "Find a deployment fast", body: "Search tracked rows and filter by provider and state. The headline and monitoring warnings still cover everything you track." },
   { head: "Keep large accounts manageable", body: "Collapse project groups in Settings, or collapse and expand them all at once. Search reveals matching projects without losing your saved layout." },
   { head: "Each row shows where it came from", body: "You get the branch, the short commit and how long it took to build, led by the provider’s logo when you track more than one." },
@@ -105,7 +105,7 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
     <section id="tour" class="wrap py-16 md:py-24" aria-labelledby="tour-title">
       <div class="grid items-center gap-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-16">
         <div class="lit-menu relative mx-auto w-full max-w-[380px]">
-          <MenuMock label="The Deployed Yet? menu, open under its checkmark in the Mac menu bar: “Yep. All deployed.” above a search field and provider and state filters, then Vercel, Cloudflare and GitHub Actions deploys grouped into Today, This week and Earlier, each with branch, commit and build time." />
+          <MenuMock label="The Deployed Yet? menu, open under its question mark in the Mac menu bar: “Not yet. 1 building.” above search and filters, with an older rightblogger build in progress and its newer ready deploy under Today, followed by other deployments." />
         </div>
         <div>
           <h2 id="tour-title" class="title max-w-md">The whole app fits in one menu.</h2>

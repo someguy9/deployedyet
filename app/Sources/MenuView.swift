@@ -172,7 +172,8 @@ struct MenuView: View {
     private var summary: String {
         let rows = store.rows
         let providers = Set(rows.map(\.provider)).count
-        var parts = ["\(rows.count) project\(rows.count == 1 ? "" : "s")"]
+        let projects = Set(rows.map(\.projectID)).count
+        var parts = ["\(projects) project\(projects == 1 ? "" : "s")"]
         if providers > 1 { parts.append("\(providers) providers") }
         if let newest = rows.map(\.createdAt).max(), store.overall != .building {
             parts.append("last deploy \(newest.formatted(.relative(presentation: .named)))")

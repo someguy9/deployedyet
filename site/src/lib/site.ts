@@ -54,7 +54,7 @@ export const features: Feature[] = [
   {
     tag: "Find",
     title: "Find the deployment you need",
-    body: "Search tracked rows by project, team, account, branch, commit, message or provider. Combine provider and state filters, see the matching count, and clear them whenever you like.",
+    body: "See each project's newest tracked deploy alongside its older builds still in progress. Search by project, team, account, branch, commit, message or provider, and combine provider and state filters.",
   },
   {
     tag: "Details",

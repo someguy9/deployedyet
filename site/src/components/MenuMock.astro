@@ -10,8 +10,11 @@ import githubactions from "~/icons/githubactions.svg?raw";
 const logos = { vercel, cloudflare, githubactions };
 const tints = { vercel: "currentColor", cloudflare: "#F38020", githubactions: "#2088FF" }; // ProviderLogo.swift tints
 const sections = [
+  { title: "In progress", rows: [
+    { provider: "vercel", name: "rightblogger", message: "Improve keyword research results", branch: "main", sha: "1ab238f", built: "", when: "building 2:24", building: true },
+  ] },
   { title: "Today", rows: [
-    { provider: "vercel", name: "rightblogger", message: "Add bulk keyword research to the dashboard", branch: "main", sha: "cc11643", built: "3m 17s", when: "1h ago" },
+    { provider: "vercel", name: "rightblogger", message: "Add bulk keyword research to the dashboard", branch: "main", sha: "cc11643", built: "3m 17s", when: "1m ago" },
     { provider: "cloudflare", name: "sharetext", message: "Add live clipboard rooms", branch: "main", sha: "9419a75", built: "2m 4s", when: "3h ago" },
   ] },
   { title: "This week", rows: [
@@ -25,23 +28,24 @@ const sections = [
 ] as const;
 const rows = sections.flatMap((s) => s.rows);
 const providers = new Set(rows.map((r) => r.provider)).size;
+const projects = new Set(rows.map((r) => r.name)).size;
 const { label } = Astro.props;
 ---
 
 <div class="fit" role="img" aria-label={label}>
   <!-- A slice of the Mac menu bar, so the panel reads as what it is: the app's ✓, pressed, with the menu dropped below it. -->
   <div class="menubar">
-    <span class="item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+    <span class="item active">?</span>
     <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.86a10 10 0 0 1 14 0"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/></svg></span>
     <span class="item"><svg class="battery" viewBox="0 0 30 14" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1" y="1" width="24" height="12" rx="3.5"/><rect x="3" y="3" width="15" height="8" rx="1.8" fill="currentColor" stroke="none"/><path d="M27.5 5v4" stroke-linecap="round"/></svg></span>
     <span class="item clock" data-clock>Tue 9:41</span>
   </div>
   <div class="menu">
     <div class="head">
-      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+      <span class="badge">?</span>
       <div>
-        <p class="headline">Yep. All deployed.</p>
-        <p class="caption">{rows.length} projects · {providers} providers · last deploy 1 hour ago</p>
+        <p class="headline">Not yet. 1 building.</p>
+        <p class="caption">{projects} projects · {providers} providers</p>
       </div>
     </div>
     <div class="divider"></div>
@@ -64,16 +68,17 @@ const { label } = Astro.props;
           <p class="section">{s.title}</p>
           {s.rows.map((r) => (
             <div class="row">
-              <span class="mark"><span class="dot"></span></span>
+              <span class="mark">{'building' in r ? <span class="spinner"></span> : <span class="dot"></span>}</span>
               <div class="text">
-                <p class="line"><span class="name">{r.name}</span><span class="when">{r.when}</span></p>
+                <p class="line"><span class="name">{r.name}</span><span class:list={["when", { building: 'building' in r }]}>{r.when}</span></p>
                 <p class="caption clip">{r.message}</p>
                 <p class="meta">
                   <span class="logo" style={`color: ${tints[r.provider]};`} set:html={logos[r.provider]} />
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>
-                  <span>{r.branch}</span><span class="sha">{r.sha}</span><span>· built in {r.built}</span>
+                  <span>{r.branch}</span><span class="sha">{r.sha}</span>{r.built && <span>· built in {r.built}</span>}
                 </p>
               </div>
+              {'building' in r && <svg class="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
             </div>
           ))}
         </>
@@ -147,7 +152,7 @@ const { label } = Astro.props;
   p { margin: 0; }
   svg { flex: none; }
   .head { display: flex; align-items: center; gap: calc(12 * var(--pt)); padding: calc(14 * var(--pt)) calc(14 * var(--pt)) calc(10 * var(--pt)); }
-  .badge { display: grid; place-items: center; width: calc(28 * var(--pt)); height: calc(28 * var(--pt)); border-radius: 50%; background: var(--color-mac-green-soft); color: var(--color-mac-green); }
+  .badge { display: grid; place-items: center; width: calc(28 * var(--pt)); height: calc(28 * var(--pt)); border-radius: 50%; background: rgb(255 149 0 / 16%); color: #ff9500; font-weight: 700; }
   .badge svg { width: calc(13 * var(--pt)); height: calc(13 * var(--pt)); }
   .headline { font-weight: 700; }
   .caption { margin-top: calc(2 * var(--pt)); font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); }
@@ -172,10 +177,13 @@ const { label } = Astro.props;
   .row { display: flex; align-items: flex-start; gap: calc(10 * var(--pt)); padding: calc(7 * var(--pt)) calc(10 * var(--pt)); }
   .mark { display: grid; place-items: center; width: calc(16 * var(--pt)); height: calc(16 * var(--pt)); }
   .dot { width: calc(7 * var(--pt)); height: calc(7 * var(--pt)); border-radius: 50%; background: var(--color-mac-green); }
+  .spinner { width: calc(12 * var(--pt)); height: calc(12 * var(--pt)); border: calc(1.5 * var(--pt)) solid var(--color-mac-hairline); border-top-color: var(--color-mac-label-2); border-radius: 50%; }
+  .bell { width: calc(13 * var(--pt)); height: calc(13 * var(--pt)); color: var(--color-mac-label-2); }
   .text { flex: 1; min-width: 0; }
   .line { display: flex; align-items: baseline; justify-content: space-between; gap: calc(8 * var(--pt)); }
   .name { font-weight: 500; }
   .when { font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); font-variant-numeric: tabular-nums; }
+  .when.building { color: #ff9500; }
   .clip { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .meta { display: flex; align-items: center; gap: calc(4 * var(--pt)); margin-top: calc(2 * var(--pt)); font-size: calc(10 * var(--pt)); color: var(--color-mac-label-3); white-space: nowrap; }
   .meta svg { width: calc(9 * var(--pt)); height: calc(9 * var(--pt)); }
