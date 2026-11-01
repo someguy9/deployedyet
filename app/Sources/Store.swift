@@ -141,11 +141,14 @@ final class Store {
         updatePushWatcher() // property observers don't run in init
     }
 
-    /// One row per picked project: its newest tracked deploy. Failed first (needs you), then building, then newest.
+    /// Each picked project's newest tracked deploy and any older builds, ordered by severity and date.
     var rows: [Deploy] {
         projects
             .filter { selected.contains($0.id) }
-            .compactMap { tracked($0).first }
+            .flatMap { project in
+                let deploys = tracked(project)
+                return Array(deploys.prefix(1)) + deploys.dropFirst().filter { $0.state == .building }
+            }
             .sorted { a, b in
                 let rank = { (d: Deploy) in d.isRecentFailure ? 0 : d.state == .building ? 1 : 2 }
                 return rank(a) != rank(b) ? rank(a) < rank(b) : a.createdAt > b.createdAt
