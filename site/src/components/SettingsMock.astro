@@ -1,7 +1,17 @@
 ---
 // The app's Settings window, rebuilt from SettingsView.swift: 860pt wide with a 250pt sidebar, scaled through --pt
 // like MenuMock. Clipped at the bottom the way a real window shows the top of a long project list.
+// Keep it in step with the app: see AGENTS.md.
 import vercel from "~/icons/vercel.svg?raw";
+import cloudflare from "~/icons/cloudflare.svg?raw";
+import githubactions from "~/icons/githubactions.svg?raw";
+
+// AccountSidebarRow: logo tile, label, "Provider · picked of all".
+const accounts = [
+  { label: "drawne", provider: "Vercel", logo: vercel, tint: "currentColor", picked: 8, all: 28, selected: true },
+  { label: "Andy Feliciotti", provider: "Cloudflare", logo: cloudflare, tint: "#F38020", picked: 12, all: 61 },
+  { label: "someguy9", provider: "GitHub", logo: githubactions, tint: "#2088FF", picked: 2, all: 14 },
+];
 
 const projects = [
   { name: "areacode411", when: "last month", on: false },
@@ -24,10 +34,12 @@ const { label } = Astro.props;
     <div class="body">
       <aside class="sidebar">
         <p class="group-title">Accounts</p>
-        <div class="account selected">
-          <span class="tile"><span class="logo" set:html={vercel} /></span>
-          <span><span class="block">drawne</span><span class="block small">Vercel · 8 of 28</span></span>
-        </div>
+        {accounts.map((a) => (
+          <div class:list={["account", { selected: a.selected }]}>
+            <span class="tile"><span class="logo" style={`color: ${a.tint};`} set:html={a.logo} /></span>
+            <span><span class="block">{a.label}</span><span class="block small">{a.provider} · {a.picked} of {a.all}</span></span>
+          </div>
+        ))}
         <p class="group-title">App</p>
         <div class="account">
           <svg class="accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -49,7 +61,7 @@ const { label } = Astro.props;
             <span class="grow">
               <span class="block name">drawne</span>
               <span class="block callout">Vercel · 8 of 28 picked · 1 team</span>
-              <span class="conn"><i></i>Connected · checked 1 minute ago</span>
+              <span class="conn"><i></i>Connected · last full check 1 minute ago</span>
             </span>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
           </div>
@@ -58,7 +70,11 @@ const { label } = Astro.props;
             <span>Filter 28 projects</span>
           </div>
         </div>
-        <p class="team"><strong>Drawne</strong><span>8 of 28</span><span class="all">All</span></p>
+        <p class="bulk"><span>Collapse All</span><span>Expand All</span></p>
+        <p class="team">
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <strong>Drawne</strong><span>8 of 28</span><span class="all">All</span>
+        </p>
         <div class="group">
           {projects.map((p) => (
             <div class="cell project">
@@ -124,7 +140,10 @@ const { label } = Astro.props;
   .cell { display: flex; align-items: center; gap: calc(8 * var(--pt)); margin: 0 calc(12 * var(--pt)); padding: calc(9 * var(--pt)) 0; border-top: 1px solid var(--color-mac-hairline); }
   .group > .cell:first-child { border-top: 0; }
   .filter { color: var(--color-mac-label-3); }
-  .team { display: flex; align-items: baseline; gap: calc(6 * var(--pt)); padding: calc(18 * var(--pt)) calc(12 * var(--pt)) calc(7 * var(--pt)); }
+  .bulk { display: flex; gap: calc(14 * var(--pt)); padding: calc(14 * var(--pt)) calc(12 * var(--pt)) 0; color: var(--color-mac-blue); }
+  .team { display: flex; align-items: center; gap: calc(6 * var(--pt)); padding: calc(12 * var(--pt)) calc(12 * var(--pt)) calc(7 * var(--pt)); }
+  .chevron { width: calc(10 * var(--pt)); height: calc(10 * var(--pt)); color: var(--color-mac-label-2); }
+  .team .all { color: var(--color-mac-blue); }
   .team span { color: var(--color-mac-label-2); }
   .team .all { margin-left: auto; }
   .switch { position: relative; flex: none; width: calc(30 * var(--pt)); height: calc(17 * var(--pt)); border-radius: 999px; background: var(--color-mac-fill); }

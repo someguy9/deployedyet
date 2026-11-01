@@ -1,22 +1,30 @@
 ---
 // The app's menu, rebuilt from MenuView.swift instead of a screenshot: same sizes in points (the menu is 380pt wide),
 // scaled to its container through --pt, so it stays sharp at any zoom and tracks the app when it changes.
-// Icons are Lucide (ISC) stand-ins for the SF Symbols the app uses.
+// Icons are Lucide (ISC) stand-ins for the SF Symbols the app uses. Keep it in step with the app: see AGENTS.md.
+import vercel from "~/icons/vercel.svg?raw";
+import cloudflare from "~/icons/cloudflare.svg?raw";
+import githubactions from "~/icons/githubactions.svg?raw";
+
+// Rows mix providers, so each meta line leads with its provider's logo, as the app does when there's more than one.
+const logos = { vercel, cloudflare, githubactions };
+const tints = { vercel: "currentColor", cloudflare: "#F38020", githubactions: "#2088FF" }; // ProviderLogo.swift tints
 const sections = [
   { title: "Today", rows: [
-    { name: "rightblogger", message: "Add bulk keyword research to the dashboard", branch: "main", sha: "cc11643", built: "3m 17s", when: "1h ago" },
+    { provider: "vercel", name: "rightblogger", message: "Add bulk keyword research to the dashboard", branch: "main", sha: "cc11643", built: "3m 17s", when: "1h ago" },
+    { provider: "cloudflare", name: "sharetext", message: "Add live clipboard rooms", branch: "main", sha: "9419a75", built: "2m 4s", when: "3h ago" },
   ] },
   { title: "This week", rows: [
-    { name: "baybridgestatus", message: "Show lane closures on the map", branch: "main", sha: "4e1b9d2", built: "41s", when: "2d ago" },
-    { name: "titlecapitalize", message: "Support AP and Chicago style headlines", branch: "main", sha: "a7c03f5", built: "28s", when: "4d ago" },
-    { name: "colorkit", message: "Faster palette generator", branch: "main", sha: "5e9aad1", built: "52s", when: "5d ago" },
+    { provider: "cloudflare", name: "baybridgestatus", message: "Show lane closures on the map", branch: "main", sha: "4e1b9d2", built: "41s", when: "2d ago" },
+    { provider: "vercel", name: "titlecapitalize", message: "Support AP and Chicago style headlines", branch: "main", sha: "a7c03f5", built: "28s", when: "4d ago" },
+    { provider: "vercel", name: "colorkit", message: "Faster palette generator", branch: "main", sha: "5e9aad1", built: "52s", when: "5d ago" },
   ] },
   { title: "Earlier", rows: [
-    { name: "videotoblog", message: "Clean up the homepage sections", branch: "redesign", sha: "6aeda2e", built: "54s", when: "1w ago" },
-    { name: "sunrisesunset", message: "API: add golden hour times", branch: "main", sha: "b0fd42a", built: "33s", when: "2w ago" },
+    { provider: "githubactions", name: "sunrisesunset", message: "API: add golden hour times", branch: "main", sha: "b0fd42a", built: "33s", when: "2w ago" },
   ] },
-];
-const count = sections.reduce((n, s) => n + s.rows.length, 0);
+] as const;
+const rows = sections.flatMap((s) => s.rows);
+const providers = new Set(rows.map((r) => r.provider)).size;
 const { label } = Astro.props;
 ---
 
@@ -33,10 +41,23 @@ const { label } = Astro.props;
       <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
       <div>
         <p class="headline">Yep. All deployed.</p>
-        <p class="caption">{count} projects · last deploy 1 hour ago</p>
+        <p class="caption">{rows.length} projects · {providers} providers · last deploy 1 hour ago</p>
       </div>
     </div>
     <div class="divider"></div>
+    <!-- Search and filters, as in MenuView.filters: a search field, provider and state pop-ups, Clear, then the count. -->
+    <div class="filters">
+      <p class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <span class="field">Search deployments</span>
+      </p>
+      <p class="controls">
+        <span class="popup">All providers<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m7 9 5-5 5 5"/><path d="m7 15 5 5 5-5"/></svg></span>
+        <span class="popup">All states<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m7 9 5-5 5 5"/><path d="m7 15 5 5 5-5"/></svg></span>
+        <span class="button">Clear</span>
+      </p>
+      <p class="count">{rows.length} of {rows.length} deployments</p>
+    </div>
     <div class="list">
       {sections.map((s) => (
         <>
@@ -48,6 +69,7 @@ const { label } = Astro.props;
                 <p class="line"><span class="name">{r.name}</span><span class="when">{r.when}</span></p>
                 <p class="caption clip">{r.message}</p>
                 <p class="meta">
+                  <span class="logo" style={`color: ${tints[r.provider]};`} set:html={logos[r.provider]} />
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>
                   <span>{r.branch}</span><span class="sha">{r.sha}</span><span>· built in {r.built}</span>
                 </p>
@@ -130,6 +152,21 @@ const { label } = Astro.props;
   .headline { font-weight: 700; }
   .caption { margin-top: calc(2 * var(--pt)); font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); }
   .divider { height: 1px; margin: 0 calc(14 * var(--pt)); background: var(--color-mac-hairline); }
+  .filters { display: grid; gap: calc(8 * var(--pt)); padding: calc(8 * var(--pt)) calc(14 * var(--pt)); }
+  .search, .controls { display: flex; align-items: center; gap: calc(8 * var(--pt)); }
+  .search { gap: calc(6 * var(--pt)); }
+  .search svg { width: calc(13 * var(--pt)); height: calc(13 * var(--pt)); color: var(--color-mac-label-2); }
+  .field, .popup, .button {
+    display: flex; align-items: center; height: calc(22 * var(--pt)); padding: 0 calc(8 * var(--pt));
+    border-radius: calc(6 * var(--pt)); background: var(--color-mac-group); box-shadow: inset 0 0 0 1px var(--color-mac-hairline);
+  }
+  .field { flex: 1; color: var(--color-mac-label-3); }
+  .popup, .button { background: var(--color-mac-fill); box-shadow: inset 0 1px 0 var(--color-mac-hairline); }
+  .popup { flex: 1; justify-content: space-between; }
+  .popup svg { width: calc(10 * var(--pt)); height: calc(10 * var(--pt)); color: var(--color-mac-label-2); }
+  .count { font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); }
+  .logo { display: block; width: calc(9 * var(--pt)); height: calc(9 * var(--pt)); margin-right: calc(1 * var(--pt)); opacity: 0.8; }
+  .logo :global(svg) { display: block; width: 100%; height: 100%; }
   .list { padding: 0 calc(4 * var(--pt)) calc(4 * var(--pt)); }
   .section { padding: calc(10 * var(--pt)) calc(10 * var(--pt)) calc(2 * var(--pt)); font-size: calc(10.5 * var(--pt)); font-weight: 600; color: var(--color-mac-label-2); }
   .row { display: flex; align-items: flex-start; gap: calc(10 * var(--pt)); padding: calc(7 * var(--pt)) calc(10 * var(--pt)); }

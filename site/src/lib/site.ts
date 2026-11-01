@@ -28,8 +28,8 @@ export const providers: Provider[] = [
     id: "cloudflare",
     name: "Cloudflare",
     tint: "#F38020",
-    tracks: "Workers and Pages on every account the token can see. A plain wrangler deploy shows up as “just shipped”, since there’s no build to watch.",
-    token: "A custom token with Read access to Account Settings, Workers Scripts and Cloudflare Pages.",
+    tracks: "Workers, Workers Builds and Pages on every account the token can see. A git build shows while it runs; a plain wrangler deploy shows up as “just shipped”, since there’s no build to watch.",
+    token: "A custom token with Read access to Account Settings, Workers Scripts, Workers Builds Configuration and Cloudflare Pages.",
     tokenUrl: "https://dash.cloudflare.com/profile/api-tokens",
   },
   {
@@ -94,7 +94,7 @@ export const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Where do my tokens go?",
-    a: "Into your Mac’s Keychain. The app sends each one only to its own provider (api.vercel.com, api.cloudflare.com or api.github.com), and there’s no Deployed Yet? server or analytics in between.",
+    a: "Into your Mac’s Keychain. The app sends each one only to its own provider (api.vercel.com, api.cloudflare.com or api.github.com), and there’s no Deployed Yet? server in between. Optional usage analytics never includes a token or anything about your deploys.",
   },
   {
     q: "Why does Vercel need a full-access token?",
@@ -102,7 +102,7 @@ export const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Why do some Workers say “deployed” but never “building”?",
-    a: "When you run wrangler deploy yourself, there’s no build for Cloudflare to report, so the app only sees when it went live. Those Workers say “just shipped” for the first two minutes instead.",
+    a: "When you run wrangler deploy yourself, there’s no build for Cloudflare to report, so the app only sees when it went live. Those Workers say “just shipped” for the first two minutes instead. Workers that build from git (Workers Builds) do show “building”, as long as your token has Read access to Workers Builds Configuration.",
   },
   {
     q: "I hid the icon. How do I get back to Settings?",

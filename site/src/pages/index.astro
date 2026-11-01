@@ -19,7 +19,7 @@ const tour = [
   { head: "Broken stuff goes to the top", body: "Failed deploys first, then anything still building, then the rest by date." },
   { head: "Find a deployment fast", body: "Search tracked rows and filter by provider and state. The headline and monitoring warnings still cover everything you track." },
   { head: "Keep large accounts manageable", body: "Collapse project groups in Settings, or collapse and expand them all at once. Search reveals matching projects without losing your saved layout." },
-  { head: "Each row shows where it came from", body: "You get the branch, the short commit and how long it took to build." },
+  { head: "Each row shows where it came from", body: "You get the branch, the short commit and how long it took to build, led by the provider’s logo when you track more than one." },
   { head: "Click a row to open the deploy", body: "Right-click it to open the site or copy its URL. You can also stop tracking its previews from there." },
 ];
 
@@ -105,7 +105,7 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
     <section id="tour" class="wrap py-16 md:py-24" aria-labelledby="tour-title">
       <div class="grid items-center gap-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-16">
         <div class="lit-menu relative mx-auto w-full max-w-[380px]">
-          <MenuMock label="The Deployed Yet? menu, open under its checkmark in the Mac menu bar: “Yep. All deployed.” above deploys grouped into Today, This week and Earlier, each with branch, commit and build time." />
+          <MenuMock label="The Deployed Yet? menu, open under its checkmark in the Mac menu bar: “Yep. All deployed.” above a search field and provider and state filters, then Vercel, Cloudflare and GitHub Actions deploys grouped into Today, This week and Earlier, each with branch, commit and build time." />
         </div>
         <div>
           <h2 id="tour-title" class="title max-w-md">The whole app fits in one menu.</h2>
@@ -148,7 +148,7 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
       <h2 id="details" class="title max-w-2xl">The stuff you’d open the dashboard for.</h2>
       <div class="mt-10 grid gap-4 lg:grid-cols-3">
         <figure class="lit-window card overflow-hidden p-2 lg:col-span-2 lg:row-span-2">
-          <SettingsMock label="Deployed Yet? Settings: an accounts sidebar and a Vercel team’s projects with a toggle for each." />
+          <SettingsMock label="Deployed Yet? Settings: a sidebar with Vercel, Cloudflare and GitHub accounts, and a Vercel team’s projects in a collapsible group with a toggle for each." />
         </figure>
         {details.map((f) => (
           <article class="card p-6">
