@@ -1,5 +1,12 @@
 [
   {
+    "tag_name": "v0.1.8",
+    "published_at": "2026-11-01T16:43:37Z",
+    "body": "## See Cloudflare Workers Builds\n\n- Workers that deploy from git (Workers Builds) now show the build while it runs, then **Ready** or **Failed**, with the branch, commit and message. Before, a push only showed up once it was already live, as \"Deployed with wrangler\".\n- A push notifies once. The wrangler deploy that a build runs for you is folded into the build; a wrangler deploy of your own after the build still shows on its own.\n- Builds from non-production branches count as previews, like Pages and Vercel previews.\n- Add **Workers Builds Configuration: Read** to your Cloudflare token to turn this on (edit it at dash.cloudflare.com/profile/api-tokens; the token itself doesn't change). Without it, Workers show exactly as before.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.8 (build 9)**\n\nBuilt from commit `703e1caaff92ff5526606b58298b07b6d637b08c` on `main`. Developer ID signed, Apple-notarized, stapled, and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `115ec272e3a012f0a1f85e5fe1a522e2c044271a7605b2e3c8a216769be1836b`\n",
+    "draft": false,
+    "prerelease": false
+  },
+  {
     "tag_name": "v0.1.7",
     "published_at": "2026-10-31T19:10:10Z",
     "body": "## Tell Workers and Pages apart\n\n- A Cloudflare account can have a Worker and a Pages project with the same name. Settings used to show them as two identical rows; each Cloudflare project now says **Worker** or **Pages** next to its last deploy.\n- VoiceOver reads the kind with the project name too, so the two toggles no longer sound the same.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.7 (build 8)**\n\nBuilt from commit `cc00025001458745011368ba753aa60305277715` on `main`. Developer ID signed, Apple-notarized, stapled, and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `ff34d9bb44d74941bacd61cd18fc406fd2d5f845b2906b3b9e1fd1a65951f8b3`\n",
