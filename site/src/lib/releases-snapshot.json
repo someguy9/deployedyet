@@ -1,5 +1,12 @@
 [
   {
+    "tag_name": "v0.1.10",
+    "published_at": "2026-11-04T21:56:23Z",
+    "body": "## Acknowledge failures without losing track of them\n\n- Right-click a failed deployment and choose **Acknowledge failure** to clear its headline and menu bar attention.\n- Acknowledged failures keep their Failed status, details, search results and Failed filter visibility, with a muted label in the date sections.\n- Choose **Mark as unacknowledged** to restore attention. A new deployment or newly failed GitHub check demands attention again.\n- Acknowledgements persist locally across restarts, stay scoped to the connected account and deployment, and never dismiss monitoring warnings.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.10 (build 11)**\n\nBuilt from merged commit `4060df06fcba1f0b9eef7c1e5fc41f52082abd37` on `main`. Developer ID signed, Apple-notarized, stapled and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `8111430c6d2678c56ccf2ebf9f89cd4fae14fa017f2d6bd484b6914015aac860`\n\nChanges: https://github.com/someguy9/deployedyet/pull/10\n",
+    "draft": false,
+    "prerelease": false
+  },
+  {
     "tag_name": "v0.1.9",
     "published_at": "2026-11-01T21:25:29Z",
     "body": "## Keep concurrent builds in sight\n\n- Each tracked project now shows its newest deployment **and any older deployments still building**. A newer deploy no longer hides a build you are waiting on.\n- Search and filter individual deployment rows, and watch any in-progress build until it finishes. Finished older builds leave the list automatically.\n- The header counts distinct projects, while filters count deployment rows, so concurrent builds do not inflate your project count.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.9 (build 10)**\n\nBuilt from merged commit `b63fa5b3a170913911a3712467024144f7ea4a10` on `main`. Developer ID signed, Apple-notarized, stapled, and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `f69b6dfa7efd5e6acc894d8dae1bce9fe34d9e9d56129f72269fc754dd6f75cf`\n\nChanges: https://github.com/someguy9/deployedyet/pull/8\n",
