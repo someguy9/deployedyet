@@ -154,7 +154,7 @@ private struct Run: Decodable {
             : states.contains(.failed) ? .failed
             : states.contains(.ready) ? .ready : .canceled
         let first = runs.min { $0.created < $1.created }!
-        let createdAt = first.created
+        let createdAt = state == .failed ? (runs.filter { $0.state == .failed }.map(\.created).max() ?? first.created) : first.created
         let startedAt = runs.compactMap(\.started).min() ?? createdAt
         let ended = state == .ready ? runs.compactMap { $0.updated_at.flatMap { try? Date($0, strategy: .iso8601) } }.max() : nil
         let defaultBranch = repo.default_branch ?? "main"
@@ -181,7 +181,8 @@ private struct Run: Decodable {
                 : URL(string: "https://github.com/\(repo.full_name)/commit/\(sha)/checks"),
             siteURL: nil,
             projectURL: URL(string: "https://github.com/\(repo.full_name)/actions"),
-            commit: first.head_sha
+            commit: first.head_sha,
+            failureSignature: runs.filter { $0.state == .failed }.map { "\($0.id):\($0.run_attempt ?? 1)" }.sorted().joined(separator: ",")
         )
     }
 }

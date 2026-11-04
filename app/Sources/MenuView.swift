@@ -12,7 +12,7 @@ struct MenuView: View {
         let order = ["Failed", "In progress", "Today", "This week", "Earlier"]
         let groups = Dictionary(grouping: matchingRows) { d -> String in
             switch d.state {
-            case .failed where d.isRecentFailure: "Failed" // older failures sort by date with the rest
+            case .failed where store.needsFailureAttention(d): "Failed" // older failures sort by date with the rest
             case .building: "In progress"
             default:
                 Calendar.current.isDateInToday(d.createdAt) ? "Today"
@@ -260,7 +260,7 @@ struct DeployRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            StatusIcon(state: deploy.state, stale: deploy.state == .failed && !deploy.isRecentFailure)
+            StatusIcon(state: deploy.state, stale: deploy.state == .failed && !store.needsFailureAttention(deploy))
                 .padding(.top, 1) // optical: centers on the project name's line
 
             VStack(alignment: .leading, spacing: 2) {
@@ -268,6 +268,9 @@ struct DeployRow: View {
                     Text(deploy.projectName).fontWeight(.medium)
                     if !deploy.isProduction {
                         Text("preview").font(.caption).foregroundStyle(.secondary)
+                    }
+                    if store.isAcknowledged(deploy) {
+                        Text("acknowledged").font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
                     if deploy.state == .building {
@@ -284,7 +287,7 @@ struct DeployRow: View {
                             Text(fresh ? "just shipped" : deploy.createdAt.shortAgo(at: context.date))
                                 .font(.caption)
                                 .foregroundStyle(fresh ? AnyShapeStyle(DeployState.ready.color)
-                                    : deploy.isRecentFailure ? AnyShapeStyle(DeployState.failed.color) : AnyShapeStyle(.secondary))
+                                    : store.needsFailureAttention(deploy) ? AnyShapeStyle(DeployState.failed.color) : AnyShapeStyle(.secondary))
                                 .monospacedDigit()
                         }
                     }
@@ -341,6 +344,13 @@ struct DeployRow: View {
         }
         .accessibilityAction(named: "Open site") { open(deploy.siteURL) }
         .accessibilityAction(named: "Production only") { store.toggleProductionOnly(deploy.projectID) }
+        .accessibilityActions {
+            if deploy.state == .failed {
+                Button(store.isAcknowledged(deploy) ? "Mark as unacknowledged" : "Acknowledge failure") {
+                    store.toggleFailureAcknowledgement(deploy)
+                }
+            }
+        }
         .help("Open this deploy. Right-click for more.")
         .contextMenu {
             Button("Open deploy") { open(deploy.url) }
@@ -352,6 +362,11 @@ struct DeployRow: View {
             }
             .disabled(deploy.siteURL == nil)
             Divider()
+            if deploy.state == .failed {
+                Button(store.isAcknowledged(deploy) ? "Mark as unacknowledged" : "Acknowledge failure") {
+                    store.toggleFailureAcknowledgement(deploy)
+                }
+            }
             if store.trackPreviews {
                 Toggle("Production only", isOn: Binding(
                     get: { store.productionOnly.contains(deploy.projectID) },
@@ -382,7 +397,7 @@ struct DeployRow: View {
 
     private var accessibilitySummary: String {
         let when = deploy.createdAt.formatted(.relative(presentation: .named))
-        return [deploy.projectName, deploy.isProduction ? nil : "preview", deploy.state.label, when,
+        return [deploy.projectName, deploy.isProduction ? nil : "preview", deploy.state.label, store.isAcknowledged(deploy) ? "acknowledged" : nil, when,
                 deploy.message?.components(separatedBy: .newlines).first, deploy.branch.map { "branch \($0)" }, deploy.team]
             .compactMap { $0 }.joined(separator: ", ")
     }

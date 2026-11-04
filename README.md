@@ -22,7 +22,8 @@
 
 - Add as many Vercel, Cloudflare (Workers and Pages) and GitHub Actions accounts as you have, then pick which projects to watch.
 - The menu bar shows `?` while something is building, `✓` once it's live and `!` if it broke. It turns amber while building, green for a few minutes after a deploy lands, and red while anything is failing. There are six icon styles, and you can hide the icon until something needs you.
-- Each project shows its newest tracked deploy and any older deploys still building, so concurrent builds remain visible and watchable. Failed deploys sit at the top, then builds, then the rest by date. Each row shows the branch, short commit and build time.
+- Each project shows its newest tracked deploy and any older deploys still building, so concurrent builds remain visible and watchable. Recent unacknowledged failures sit at the top, then builds, then the rest by date. Each row shows the branch, short commit and build time.
+- Right-click a failed deployment to acknowledge it or mark it unacknowledged again. Acknowledged failures remain visible and searchable with the Failed filter, but no longer demand attention; new failures still do. Acknowledgements stay on your Mac and are removed with the account.
 - Search tracked deployment rows by project, team, account, branch, commit, message or provider, and combine provider and state filters. Clear resets them; the menu shows the matching count while the headline and monitoring warnings stay global.
 - Collapse project groups in Settings to keep large accounts manageable, or collapse and expand all groups at once. Search reveals matching groups without losing your saved collapsed state.
 - You can get a notification when a deploy fails or production goes live. Click the bell on a single build to hear when that one finishes.
