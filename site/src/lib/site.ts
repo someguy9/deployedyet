@@ -54,7 +54,7 @@ export const features: Feature[] = [
   {
     tag: "Find",
     title: "Find the deployment you need",
-    body: "See each project's newest tracked deploy alongside its older builds still in progress. Search by project, team, account, branch, commit, message or provider, and combine provider and state filters.",
+    body: "See each project's newest tracked deploy alongside its older builds still in progress. Search by project, team, account, branch, commit, message or provider, and combine provider and state filters. Right-click a failure to acknowledge it without hiding its details.",
   },
   {
     tag: "Details",
@@ -84,6 +84,10 @@ export const features: Feature[] = [
 ];
 
 export const faqs: { q: string; a: string }[] = [
+  {
+    q: "Can I clear a failure without hiding it?",
+    a: "Right-click a failed deployment and choose Acknowledge failure. It stays visible and in the Failed filter, but stops demanding attention. You can mark it unacknowledged again; a new failure still gets your attention. Acknowledgements stay on your Mac.",
+  },
   {
     q: "Is it free?",
     a: "Yes, and the code is MIT licensed. If it saves you a few dashboard refreshes, you can buy me a coffee.",

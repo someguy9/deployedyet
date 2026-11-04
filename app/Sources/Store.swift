@@ -4,6 +4,17 @@ import UserNotifications
 
 @MainActor @Observable
 final class Store {
+    private struct FailureAcknowledgement: Hashable, Codable {
+        let accountID: UUID
+        let projectID: String
+        let deploymentID: String
+        let createdAt: Date
+        let failureSignature: String?
+    }
+
+    private var acknowledgedFailures: Set<FailureAcknowledgement> {
+        didSet { save(acknowledgedFailures, "acknowledgedFailures") }
+    }
     var accounts: [Account] { didSet { save(accounts, "accounts") } }
     var selected: Set<String> {
         didSet {
@@ -96,6 +107,7 @@ final class Store {
     private let notificationDelegate = NotificationDelegate()
 
     init() {
+        acknowledgedFailures = Self.load("acknowledgedFailures") ?? []
         accounts = Self.load("accounts") ?? []
         selected = Self.load("selected") ?? []
         known = Self.load("knownProjects")
@@ -150,9 +162,31 @@ final class Store {
                 return Array(deploys.prefix(1)) + deploys.dropFirst().filter { $0.state == .building }
             }
             .sorted { a, b in
-                let rank = { (d: Deploy) in d.isRecentFailure ? 0 : d.state == .building ? 1 : 2 }
+                let rank = { (d: Deploy) in self.needsFailureAttention(d) ? 0 : d.state == .building ? 1 : 2 }
                 return rank(a) != rank(b) ? rank(a) < rank(b) : a.createdAt > b.createdAt
             }
+    }
+
+    private func acknowledgement(for deploy: Deploy) -> FailureAcknowledgement? {
+        guard let project = projects.first(where: { $0.id == deploy.projectID }) else { return nil }
+        return FailureAcknowledgement(accountID: project.accountID, projectID: project.id, deploymentID: deploy.id,
+                                      createdAt: deploy.createdAt, failureSignature: deploy.failureSignature)
+    }
+
+    func isAcknowledged(_ deploy: Deploy) -> Bool {
+        guard deploy.state == .failed, let key = acknowledgement(for: deploy) else { return false }
+        return acknowledgedFailures.contains(key)
+    }
+
+    func needsFailureAttention(_ deploy: Deploy) -> Bool {
+        deploy.isRecentFailure && !isAcknowledged(deploy)
+    }
+
+    func toggleFailureAcknowledgement(_ deploy: Deploy) {
+        guard deploy.state == .failed, let key = acknowledgement(for: deploy) else { return }
+        if acknowledgedFailures.contains(key) { acknowledgedFailures.remove(key) }
+        else { acknowledgedFailures.insert(key) }
+        updateWobble()
     }
 
     private func tracked(_ project: Project) -> [Deploy] {
@@ -171,12 +205,12 @@ final class Store {
 
     /// nil = nothing picked.
     /// An old failure counts as settled (like a cancel), so it never turns the menu bar red.
-    var overall: DeployState? { rows.map { $0.state == .failed && !$0.isRecentFailure ? .canceled : $0.state }.max() }
+    var overall: DeployState? { rows.map { $0.state == .failed && !needsFailureAttention($0) ? .canceled : $0.state }.max() }
 
     /// The app's name is a question. This is the answer.
     var headline: String {
         let rows = rows
-        let failed = rows.filter(\.isRecentFailure)
+        let failed = rows.filter(needsFailureAttention)
         let building = rows.filter { $0.state == .building }
         if let first = failed.first {
             return failed.count == 1 ? "Nope. \(first.projectName) failed." : "Nope. \(failed.count) failed."
@@ -295,6 +329,13 @@ final class Store {
         let live = Set(accounts.map(\.id))
         var ids = Set<String>()
         projects = all.filter { live.contains($0.accountID) && ids.insert($0.id).inserted } // two tokens can see the same team
+        let active = projects.flatMap { project in
+            project.latest.filter { $0.state != .failed }.map { (project.accountID, project.id, $0.id) }
+        }
+        let remainingAcknowledgements = acknowledgedFailures.filter { key in
+            !active.contains { $0.0 == key.accountID && $0.1 == key.projectID && $0.2 == key.deploymentID }
+        }
+        if remainingAcknowledgements != acknowledgedFailures { acknowledgedFailures = remainingAcknowledgements }
         errors = errors.filter { live.contains($0.key) }
         lastSuccessfulChecks = lastSuccessfulChecks.filter { live.contains($0.key) }
         lastAttempt = .now
@@ -393,6 +434,7 @@ final class Store {
         accountErrors[account.id] = nil
         lastSuccessfulChecks[account.id] = nil
         accounts.removeAll { $0.id == account.id }
+        acknowledgedFailures = acknowledgedFailures.filter { $0.accountID != account.id }
         // Picks stay: another token may see the same team. Unfetched ids are ignored by `rows`.
         projects.removeAll { $0.accountID == account.id }
         Self.writeCache(projects, successfulChecks: lastSuccessfulChecks) // its names and commits leave the disk now, not at the next poll

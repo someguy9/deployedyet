@@ -206,6 +206,7 @@ struct Deploy: Identifiable, Hashable, Codable {
     var isManual = false
     /// Full commit SHA when the provider knows it.
     var commit: String?
+    var failureSignature: String?
 
     var shortCommit: String? { commit.map { String($0.prefix(7)) } }
 }
