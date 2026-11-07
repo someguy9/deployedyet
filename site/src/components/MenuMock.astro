@@ -23,7 +23,7 @@ const sections = [
     { provider: "vercel", name: "colorkit", message: "Faster palette generator", branch: "main", sha: "5e9aad1", built: "52s", when: "5d ago" },
   ] },
   { title: "Earlier", rows: [
-    { provider: "githubactions", name: "sunrisesunset", message: "API: add golden hour times", branch: "main", sha: "b0fd42a", built: "33s", when: "2w ago" },
+    { provider: "githubactions", name: "sunrisesunset", message: "2 workflows: add golden hour times", branch: "main", sha: "b0fd42a", built: "33s", when: "2w ago", workflows: ["API", "Deploy"] },
   ] },
 ] as const;
 const rows = sections.flatMap((s) => s.rows);
@@ -32,7 +32,7 @@ const projects = new Set(rows.map((r) => r.name)).size;
 const { label } = Astro.props;
 ---
 
-<div class="fit" role="img" aria-label={label}>
+<div class="fit" role="group" aria-label={label}>
   <!-- A slice of the Mac menu bar, so the panel reads as what it is: the app's ✓, pressed, with the menu dropped below it. -->
   <div class="menubar">
     <span class="item active">?</span>
@@ -67,6 +67,7 @@ const { label } = Astro.props;
         <>
           <p class="section">{s.title}</p>
           {s.rows.map((r) => (
+            <>
             <div class="row">
               <span class="mark">{'building' in r ? <span class="spinner"></span> : 'acknowledged' in r ? <svg viewBox="0 0 16 16" fill="currentColor" aria-label="Failed"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Zm-.75 3h1.5v5h-1.5Zm0 6.5h1.5V12h-1.5Z"/></svg> : <span class="dot"></span>}</span>
               <div class="text">
@@ -80,6 +81,11 @@ const { label } = Astro.props;
               </div>
               {'building' in r && <svg class="bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>}
             </div>
+            {'workflows' in r && <details class="workflows">
+              <summary>{r.workflows.length} workflows</summary>
+              <div class="workflow-list">{r.workflows.map((name) => <p class="workflow"><span class="mark"><span class="dot"></span></span><span>{name}</span><span class="workflow-status">Ready</span><span aria-hidden="true">↗</span></p>)}</div>
+            </details>}
+            </>
           ))}
         </>
       ))}
@@ -180,6 +186,11 @@ const { label } = Astro.props;
   .spinner { width: calc(12 * var(--pt)); height: calc(12 * var(--pt)); border: calc(1.5 * var(--pt)) solid var(--color-mac-hairline); border-top-color: var(--color-mac-label-2); border-radius: 50%; }
   .bell { width: calc(13 * var(--pt)); height: calc(13 * var(--pt)); color: var(--color-mac-label-2); }
   .text { flex: 1; min-width: 0; }
+  .workflows { padding: 0 calc(10 * var(--pt)) calc(7 * var(--pt)) calc(34 * var(--pt)); font-size: calc(10.5 * var(--pt)); }
+  .workflows summary { cursor: pointer; width: fit-content; }
+  .workflow-list { padding-top: calc(4 * var(--pt)); display: grid; gap: calc(6 * var(--pt)); }
+  .workflow { display: flex; align-items: center; gap: calc(6 * var(--pt)); }
+  .workflow-status { margin-left: auto; color: var(--color-mac-label-2); }
   .line { display: flex; align-items: baseline; justify-content: space-between; gap: calc(8 * var(--pt)); }
   .name { font-weight: 500; }
   .acknowledged, .mark svg { color: var(--color-mac-label-2); }

@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuView: View {
     @Environment(Store.self) private var store
     @State private var filter = DeployFilter()
+    @State private var expandedWorkflowDeployments: Set<String> = []
     @FocusState private var searchFocused: Bool
 
     private var matchingRows: [Deploy] { store.rows.filter(filter.matches) }
@@ -63,7 +64,15 @@ struct MenuView: View {
                             }
                             // Keyed by the whole deploy, not its id: a row that went building → ready while the menu sat
                             // open (or hidden) was being reused as-is, spinner and all.
-                            ForEach(section.rows, id: \.self) { DeployRow(deploy: $0, showTeam: showTeam, showProvider: showProvider) }
+                            ForEach(section.rows, id: \.self) { deploy in
+                                DeployRow(deploy: deploy, showTeam: showTeam, showProvider: showProvider, workflowsExpanded: Binding(
+                                    get: { expandedWorkflowDeployments.contains(deploy.id) },
+                                    set: { expanded in
+                                        if expanded { expandedWorkflowDeployments.insert(deploy.id) }
+                                        else { expandedWorkflowDeployments.remove(deploy.id) }
+                                    }
+                                ))
+                            }
                         }
                     }
                     .padding(.horizontal, 4)
@@ -256,9 +265,49 @@ struct DeployRow: View {
     let deploy: Deploy
     var showTeam = true
     var showProvider = true
+    @Binding var workflowsExpanded: Bool
     @State private var hovering = false
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            summaryRow
+            if let workflows = deploy.workflows, !workflows.isEmpty {
+                DisclosureGroup(workflows.count == 1 ? "1 workflow" : "\(workflows.count) workflows", isExpanded: $workflowsExpanded) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(workflows) { workflow in
+                            Button { open(workflow.url) } label: {
+                                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                    StatusIcon(state: workflow.state)
+                                    Text(workflow.name).lineLimit(2)
+                                    Spacer(minLength: 4)
+                                    VStack(alignment: .trailing, spacing: 1) {
+                                        Text(workflow.detail).foregroundStyle(.secondary)
+                                        if workflow.attempt > 1 {
+                                            Text("Attempt \(workflow.attempt)").foregroundStyle(.tertiary)
+                                        }
+                                    }
+                                    Image(systemName: "arrow.up.right").foregroundStyle(.tertiary)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(.rect)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(workflow.url == nil)
+                            .help("Open this workflow run on GitHub")
+                            .accessibilityLabel("\(workflow.name), \(workflow.detail), attempt \(workflow.attempt)")
+                        }
+                    }
+                    .padding(.top, 4)
+                }
+                .font(.caption)
+                .padding(.leading, 34)
+                .padding(.trailing, 10)
+                .padding(.bottom, 7)
+            }
+        }
+    }
+
+    private var summaryRow: some View {
         HStack(alignment: .top, spacing: 10) {
             StatusIcon(state: deploy.state, stale: deploy.state == .failed && !store.needsFailureAttention(deploy))
                 .padding(.top, 1) // optical: centers on the project name's line

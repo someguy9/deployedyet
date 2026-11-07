@@ -36,7 +36,7 @@ export const providers: Provider[] = [
     id: "githubactions",
     name: "GitHub Actions",
     tint: "#2088FF",
-    tracks: "Runs are grouped by commit, so your CI and deploy workflows from one push show up as one row. Cron jobs and bot runs don’t count.",
+    tracks: "Runs are grouped by commit. Expand a row’s workflows to see each fetched run’s status and retry attempt, then open that exact run on GitHub. Cron jobs and bot runs don’t count.",
     token: "A fine-grained token with Read access to Actions and Metadata on the repos you deploy from.",
     tokenUrl: "https://github.com/settings/personal-access-tokens/new",
   },
@@ -54,7 +54,7 @@ export const features: Feature[] = [
   {
     tag: "Find",
     title: "Find the deployment you need",
-    body: "See each project's newest tracked deploy alongside its older builds still in progress. Search by project, team, account, branch, commit, message or provider, and combine provider and state filters. Right-click a failure to acknowledge it without hiding its details.",
+    body: "See each project's newest tracked deploy alongside its older builds still in progress. Search by project, team, account, branch, commit, message, workflow name or provider, and combine provider and state filters. Right-click a failure to acknowledge it without hiding its details.",
   },
   {
     tag: "Details",
