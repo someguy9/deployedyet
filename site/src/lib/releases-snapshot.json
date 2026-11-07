@@ -1,5 +1,12 @@
 [
   {
+    "tag_name": "v0.1.11",
+    "published_at": "2026-11-07T21:26:06Z",
+    "body": "## Know which workflow needs attention\n\n- Expand a GitHub deployment to see each fetched workflow run's status, details, and retry attempt, with failed and active runs first.\n- Open an individual workflow's exact GitHub run instead of hunting through a commit's combined checks.\n- Find deployments by workflow name as well as project, branch, and commit.\n- Keep workflows expanded while their statuses change, including when a completed deployment moves into its date section.\n- Keep the existing deployment summary, watch notifications, and context-menu actions.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.11 (build 12)**\n\nBuilt from merged commit `fd0ef446394c02166011e48a249e183a9d012a21` on `main`. Developer ID signed, Apple-notarized, stapled and Gatekeeper-verified. The attached `appcast.xml` carries the independently verified Sparkle-signed update enclosure.\n\nDMG SHA-256: `0fa1b7f3feeace4af9509846ad00c49e46a8f7f8a25ec3e89a116b11adb71634`\n\nChanges: https://github.com/someguy9/deployedyet/pull/12\n",
+    "draft": false,
+    "prerelease": false
+  },
+  {
     "tag_name": "v0.1.10",
     "published_at": "2026-11-04T21:56:23Z",
     "body": "## Acknowledge failures without losing track of them\n\n- Right-click a failed deployment and choose **Acknowledge failure** to clear its headline and menu bar attention.\n- Acknowledged failures keep their Failed status, details, search results and Failed filter visibility, with a muted label in the date sections.\n- Choose **Mark as unacknowledged** to restore attention. A new deployment or newly failed GitHub check demands attention again.\n- Acknowledgements persist locally across restarts, stay scoped to the connected account and deployment, and never dismiss monitoring warnings.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.10 (build 11)**\n\nBuilt from merged commit `4060df06fcba1f0b9eef7c1e5fc41f52082abd37` on `main`. Developer ID signed, Apple-notarized, stapled and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `8111430c6d2678c56ccf2ebf9f89cd4fae14fa017f2d6bd484b6914015aac860`\n\nChanges: https://github.com/someguy9/deployedyet/pull/10\n",
