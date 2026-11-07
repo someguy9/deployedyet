@@ -207,8 +207,18 @@ struct Deploy: Identifiable, Hashable, Codable {
     /// Full commit SHA when the provider knows it.
     var commit: String?
     var failureSignature: String?
+    var workflows: [DeployWorkflow]?
 
     var shortCommit: String? { commit.map { String($0.prefix(7)) } }
+}
+
+struct DeployWorkflow: Identifiable, Hashable, Codable {
+    let id: Int
+    let name: String
+    let state: DeployState
+    let detail: String
+    let attempt: Int
+    let url: URL?
 }
 
 struct DeployFilter {
@@ -221,6 +231,7 @@ struct DeployFilter {
               state == nil || state == deploy.state else { return false }
         let fields = [deploy.projectName, deploy.team, deploy.accountLabel, deploy.branch ?? "",
                       deploy.commit ?? "", deploy.message ?? "", deploy.provider.name, deploy.provider.rawValue]
+            + (deploy.workflows ?? []).map(\.name)
         return query.split(whereSeparator: \.isWhitespace).allSatisfy { term in
             fields.contains { $0.localizedCaseInsensitiveContains(String(term)) }
         }

@@ -141,6 +141,23 @@ private struct Run: Decodable {
 
     var started: Date? { run_started_at.flatMap { try? Date($0, strategy: .iso8601) } }
 
+    var workflow: DeployWorkflow {
+        let detail = switch (status, conclusion) {
+        case ("completed", "timed_out"): "Timed out"
+        case ("completed", "startup_failure"): "Could not start"
+        case ("completed", "action_required"): "Action required"
+        case ("completed", "skipped"): "Skipped"
+        case ("completed", "neutral"): "Neutral"
+        case ("completed", "stale"): "Stale"
+        case ("queued", _), ("requested", _), ("pending", _): "Queued"
+        case ("waiting", _): "Waiting"
+        default: state.label
+        }
+        return DeployWorkflow(id: id, name: name ?? "Workflow \(id)", state: state,
+                              detail: detail, attempt: run_attempt ?? 1,
+                              url: html_url.flatMap(URL.init(string:)))
+    }
+
     /// A re-run keeps its original created_at; count it from when the new attempt started.
     var created: Date {
         let original = created_at.flatMap { try? Date($0, strategy: .iso8601) } ?? .distantPast
@@ -160,9 +177,8 @@ private struct Run: Decodable {
         let defaultBranch = repo.default_branch ?? "main"
         // PR runs build the PR's code even when its branch is called main (forks), so they're previews.
         let production = runs.contains { $0.head_branch == defaultBranch && !["pull_request", "pull_request_target"].contains($0.event ?? "") }
-        let workflows = runs.compactMap(\.name)
         let commit = first.head_commit?.message?.components(separatedBy: .newlines).first
-        let label = workflows.count == 1 ? workflows[0] : "\(workflows.count) workflows"
+        let label = runs.count == 1 ? first.workflow.name : "\(runs.count) workflows"
         return Deploy(
             id: "gh:\(repo.full_name):\(sha)",
             provider: .github,
@@ -182,7 +198,15 @@ private struct Run: Decodable {
             siteURL: nil,
             projectURL: URL(string: "https://github.com/\(repo.full_name)/actions"),
             commit: first.head_sha,
-            failureSignature: runs.filter { $0.state == .failed }.map { "\($0.id):\($0.run_attempt ?? 1)" }.sorted().joined(separator: ",")
+            failureSignature: runs.filter { $0.state == .failed }.map { "\($0.id):\($0.run_attempt ?? 1)" }.sorted().joined(separator: ","),
+            workflows: runs.map(\.workflow).sorted {
+                let order: [DeployState] = [.building, .failed, .ready, .canceled]
+                let left = order.firstIndex(of: $0.state)!
+                let right = order.firstIndex(of: $1.state)!
+                if left != right { return left < right }
+                if $0.name != $1.name { return $0.name < $1.name }
+                return $0.id < $1.id
+            }
         )
     }
 }
