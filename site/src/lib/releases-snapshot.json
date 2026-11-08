@@ -1,5 +1,12 @@
 [
   {
+    "tag_name": "v0.1.12",
+    "published_at": "2026-11-08T18:11:00Z",
+    "body": "## No more early \"it's live\"\n\n- Cloudflare Workers Builds no longer post **\"Yep, it's live. Deployed with wrangler\"** the moment a build starts. You get one notification, when the build actually finishes.\n- The same goes for preview-branch builds: starting one no longer re-announces the last production deploy.\n- An old deployment that reappears in a provider's list, such as a Pages or Vercel rollback, no longer looks like a fresh finish.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.12 (build 13)**\n\nBuilt from commit `21d7a37e56ac60d1a5d7b8b5332ab8da23c06089` on `main`. Developer ID signed, Apple-notarized, stapled and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `b02bdf7dea8049e2b29994dfee12617bd1ea5721e1415a8e60c087b3585abb9b`\n",
+    "draft": false,
+    "prerelease": false
+  },
+  {
     "tag_name": "v0.1.11",
     "published_at": "2026-11-07T21:26:06Z",
     "body": "## Know which workflow needs attention\n\n- Expand a GitHub deployment to see each fetched workflow run's status, details, and retry attempt, with failed and active runs first.\n- Open an individual workflow's exact GitHub run instead of hunting through a commit's combined checks.\n- Find deployments by workflow name as well as project, branch, and commit.\n- Keep workflows expanded while their statuses change, including when a completed deployment moves into its date section.\n- Keep the existing deployment summary, watch notifications, and context-menu actions.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.11 (build 12)**\n\nBuilt from merged commit `fd0ef446394c02166011e48a249e183a9d012a21` on `main`. Developer ID signed, Apple-notarized, stapled and Gatekeeper-verified. The attached `appcast.xml` carries the independently verified Sparkle-signed update enclosure.\n\nDMG SHA-256: `0fa1b7f3feeace4af9509846ad00c49e46a8f7f8a25ec3e89a116b11adb71634`\n\nChanges: https://github.com/someguy9/deployedyet/pull/12\n",
