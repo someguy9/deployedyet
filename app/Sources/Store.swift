@@ -97,6 +97,7 @@ final class Store {
     /// Last known state of every tracked deploy, and which picked projects we've already looked at.
     private var seen: [String: DeployState] = [:]
     private var seenProjects: Set<String> = []
+    private var lastNotifyPass: Date?
     private(set) var refreshing = false
     private var lastFull: Date?
     private var lastPicked: Date?
@@ -540,7 +541,12 @@ final class Store {
                 }
                 // Was building last pass, or is brand new on a project we already knew (built between polls).
                 // Watched deploys were building by definition; survives a forgetSeen() mid-build.
-                let finished = watched.contains(deploy.id) || seen[deploy.id] == .building || (seen[deploy.id] == nil && seenProjects.contains(project.id))
+                // "Brand new" also has to be recent: an old deploy that drops out of a provider's list and comes back
+                // (the Worker script row when a preview build starts, a Pages or Vercel rollback) isn't a finish.
+                // ponytail: 5 min slack covers poll gaps and server clock skew; widen if real finishes get missed.
+                let isNew = seen[deploy.id] == nil && seenProjects.contains(project.id)
+                    && deploy.createdAt > (lastNotifyPass ?? .distantPast).addingTimeInterval(-300)
+                let finished = watched.contains(deploy.id) || seen[deploy.id] == .building || isNew
                 guard finished else { continue }
                 justFinished = true
                 let wasWatched = watched.remove(deploy.id) != nil
@@ -551,6 +557,7 @@ final class Store {
         }
         seen = nowSeen
         seenProjects = nowProjects
+        lastNotifyPass = .now
         watched.formIntersection(nowSeen.keys) // drop watches on deploys that fell out of view
     }
 

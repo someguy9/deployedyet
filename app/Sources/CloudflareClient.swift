@@ -180,8 +180,10 @@ private struct Script: Decodable {
         )
         // The build's own `wrangler deploy` moves the script mid-build. That script change is this build, not
         // a separate "Deployed with wrangler", so hide it; a wrangler deploy after the build ends still shows.
+        // A script change from before this build (the previous build's deploy) stays hidden too: un-hiding it when
+        // a new build starts made it look brand new and posted a false "Yep, it's live." at the start of every build.
         // ponytail: 60s slack between the build's deploy step and stopped_on; widen if Cloudflare lags more.
-        let fromBuild = isProduction && deployed >= created && (stopped.map { deployed <= $0.addingTimeInterval(60) } ?? true)
+        let fromBuild = isProduction && (stopped.map { deployed <= $0.addingTimeInterval(60) } ?? true)
         let latest = (fromBuild ? [built] : [built, deploy]).sorted { $0.createdAt > $1.createdAt }
         return Project(id: projectID, name: id, accountID: account.id, teamID: cf.id, team: cf.name, latest: latest)
     }
