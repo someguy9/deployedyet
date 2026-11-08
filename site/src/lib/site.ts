@@ -52,11 +52,6 @@ export const features: Feature[] = [
     body: "The menu bar icon answers the question in the name. It wobbles while anything builds and morphs into the answer when it lands.",
   },
   {
-    tag: "Find",
-    title: "Find the deployment you need",
-    body: "See each project's newest tracked deploy alongside its older builds still in progress. Search by project, team, account, branch, commit, message, workflow name or provider, and combine provider and state filters. Right-click a failure to acknowledge it without hiding its details.",
-  },
-  {
     tag: "Details",
     title: "Keep an eye on one build",
     body: "Building rows show a live timer. Click the bell on one and you’ll get a notification when it’s done, even if you’ve turned the others off.",
@@ -85,10 +80,6 @@ export const features: Feature[] = [
 
 export const faqs: { q: string; a: string }[] = [
   {
-    q: "Can I clear a failure without hiding it?",
-    a: "Right-click a failed deployment and choose Acknowledge failure. It stays visible and in the Failed filter, but stops demanding attention. You can mark it unacknowledged again; a new failure still gets your attention. Acknowledgements stay on your Mac.",
-  },
-  {
     q: "Is it free?",
     a: "Yes, and the code is MIT licensed. If it saves you a few dashboard refreshes, you can buy me a coffee.",
   },
@@ -103,6 +94,14 @@ export const faqs: { q: string; a: string }[] = [
   {
     q: "Why does Vercel need a full-access token?",
     a: "Vercel lets you limit a token to one team or project, but it has no read-only option yet. Scope yours to a single team and set an expiry date. If Vercel ever adds read-only access, I’ll switch to it.",
+  },
+  {
+    q: "When does it send a notification?",
+    a: "When a deploy fails and when a production deploy goes live. You can turn either one off under Settings → General. Click the bell on a building row to get told when that one finishes, whatever those settings say.",
+  },
+  {
+    q: "Can I clear a failure without hiding it?",
+    a: "Right-click a failed deployment and choose Acknowledge failure. It stays visible and in the Failed filter, but stops demanding attention. You can mark it unacknowledged again; a new failure still gets your attention. Acknowledgements stay on your Mac.",
   },
   {
     q: "Why do some Workers say “deployed” but never “building”?",

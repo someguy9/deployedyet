@@ -13,7 +13,7 @@ try {
   <main id="main" class="wrap max-w-3xl py-20">
     <a href="/" class="link text-sm text-muted-foreground">Back to Deployed Yet?</a>
     <h1 class="title mt-6">Changelog</h1>
-    <p class="mt-4 text-lg text-muted-foreground">The latest updates, straight from our GitHub releases.</p>
+    <p class="mt-4 text-lg text-muted-foreground">Every release, straight from GitHub.</p>
     <p class="mt-5 text-sm text-muted-foreground" data-release-status role="status">Showing saved release notes. <a href={RELEASES_URL} class="link-inline">See releases on GitHub</a> for the latest.</p>
     <div class="mt-12" data-releases set:html={renderReleases(releases)} />
     <p class="mt-10 text-sm text-muted-foreground">Showing up to the latest 100 releases. <a href={RELEASES_URL} class="link-inline">Browse the full release history on GitHub</a>.</p>

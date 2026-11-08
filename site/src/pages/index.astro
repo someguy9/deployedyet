@@ -16,7 +16,7 @@ const version = await fetch("https://api.github.com/repos/someguy9/deployedyet/r
 const [, ...details] = features;
 
 const tour = [
-  { head: "Broken stuff goes to the top", body: "See each project's newest deploy and any older builds still running. Recent unacknowledged failures come first, then builds, then the rest by date. Acknowledge a failure to keep it visible without the noise." },
+  { head: "Broken stuff goes to the top", body: "See each project’s newest deploy and any older builds still running. Recent unacknowledged failures come first, then builds, then the rest by date. Acknowledge a failure to keep it visible without the noise." },
   { head: "Find a deployment fast", body: "Search tracked rows and filter by provider and state. The headline and monitoring warnings still cover everything you track." },
   { head: "Keep large accounts manageable", body: "Collapse project groups in Settings, or collapse and expand them all at once. Search reveals matching projects without losing your saved layout." },
   { head: "Each row shows where it came from", body: "You get the branch, the short commit and how long it took to build, led by the provider’s logo when you track more than one." },
@@ -30,6 +30,8 @@ const deploys = [
   { provider: "cloudflare", project: "edge-api", branch: "main", commit: "7f03b1d", end: "live", seconds: 19, result: "Live in 19s" },
   { provider: "githubactions", project: "deploy.yml", branch: "checkout-v2", commit: "c93e5aa", end: "failed", seconds: 26, result: "Build failed" },
 ] as const;
+
+const githubMark = "M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5Z";
 
 const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/app/run-menubar.sh";
 ---
@@ -48,6 +50,9 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
         <a href="#providers" class="link hidden rounded-full px-3 py-1.5 text-sm text-muted-foreground md:inline-flex">Providers</a>
         <a href="#faq" class="link hidden rounded-full px-3 py-1.5 text-sm text-muted-foreground md:inline-flex">FAQ</a>
         <a href="/changelog" class="link hidden rounded-full px-3 py-1.5 text-sm text-muted-foreground md:inline-flex">Changelog</a>
+        <a href={REPO_URL} class="link inline-flex size-9 items-center justify-center rounded-full text-muted-foreground md:size-10" aria-label="Deployed Yet? on GitHub" title="View on GitHub">
+          <svg aria-hidden="true" viewBox="0 0 24 24" class="size-[18px]" fill="currentColor"><path d={githubMark}/></svg>
+        </a>
         <a href="#install" class="btn-primary h-9 px-4 text-sm md:h-10 md:px-5">Download</a>
       </div>
     </div>
@@ -95,8 +100,8 @@ const clone = "git clone https://github.com/someguy9/deployedyet && deployedyet/
           </a>
           {version && <p class="-mt-1 text-sm text-muted-foreground">Version {version}, for macOS 14 or later</p>}
           <a href={REPO_URL} class="link -my-2.5 inline-flex items-center gap-2 py-2.5 text-[0.9375rem] text-muted-foreground">
-            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-4" fill="currentColor"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5Z"/></svg>
-            It’s open source. Read every line.
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-4" fill="currentColor"><path d={githubMark}/></svg>
+            Free and open source on GitHub
           </a>
         </div>
       </div>
