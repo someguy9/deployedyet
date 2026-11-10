@@ -1,5 +1,12 @@
 [
   {
+    "tag_name": "v0.1.13",
+    "published_at": "2026-11-10T20:47:32Z",
+    "body": "## Recover an account without starting over\n\n- Replace an expired or revoked provider token directly in Settings with **Replace Token…**. Keep your account label, project selections and monitoring preferences.\n- The new token is checked before Keychain is updated. Failed, incomplete or rate-limited checks leave your saved token untouched. For selected GitHub repositories, validation includes Actions access.\n- Refreshes using an older token cannot overwrite the recovered account's newer state.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.13 (build 14)**\n\nBuilt from commit `0dd7ab11952fe8e46ad9f7d3d2f1f586db159998` on `main`. Developer ID signed, Apple-notarized, stapled and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `335e9ce284a5eff4347f1814704627476ae4c0f5dc35ced6238f170b98596999`\n",
+    "draft": false,
+    "prerelease": false
+  },
+  {
     "tag_name": "v0.1.12",
     "published_at": "2026-11-08T18:11:00Z",
     "body": "## No more early \"it's live\"\n\n- Cloudflare Workers Builds no longer post **\"Yep, it's live. Deployed with wrangler\"** the moment a build starts. You get one notification, when the build actually finishes.\n- The same goes for preview-branch builds: starting one no longer re-announces the last production deploy.\n- An old deployment that reappears in a provider's list, such as a Pages or Vercel rollback, no longer looks like a fresh finish.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.12 (build 13)**\n\nBuilt from commit `21d7a37e56ac60d1a5d7b8b5332ab8da23c06089` on `main`. Developer ID signed, Apple-notarized, stapled and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `b02bdf7dea8049e2b29994dfee12617bd1ea5721e1415a8e60c087b3585abb9b`\n",
