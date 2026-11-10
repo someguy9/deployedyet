@@ -104,6 +104,7 @@ final class Store {
     private var fullUnreachable: [UUID: [TeamRef]] = [:]
     private var accountErrors: [UUID: String] = [:]
     private var backoff: [UUID: Date] = [:]
+    private var credentialVersions: [UUID: Int] = [:]
     private var wobbleTask: Task<Void, Never>?
     private let notificationDelegate = NotificationDelegate()
 
@@ -274,6 +275,7 @@ final class Store {
         var all: [Project] = []
         var anyThrew = false
         let snapshot = accounts
+        let versions = credentialVersions
         for account in snapshot {
             let mine = projects.filter { $0.accountID == account.id }
             let picked = mine.filter { selected.contains($0.id) }
@@ -289,7 +291,7 @@ final class Store {
                 continue
             }
             guard let token = Keychain.get(account.id) else {
-                let message = "Token missing from Keychain. Remove and re-add this account."
+                let message = "Token missing from Keychain. Replace it in Settings."
                 accountErrors[account.id] = message
                 errors[account.id] = message
                 all += mine
@@ -299,8 +301,16 @@ final class Store {
                 let client = account.provider.client(token: token)
                 var result = try await client
                     .projects(account: account, teams: teams ?? Set(picked.map(\.teamID)), discover: teams == nil)
+                guard accounts.contains(where: { $0.id == account.id }), credentialVersions[account.id, default: 0] == versions[account.id, default: 0] else {
+                    anyThrew = true
+                    continue
+                }
                 if full && !result.rateLimited {
-                    let picked = await autoPick(result.projects, account: account, client: client)
+                    let picked = await autoPick(result.projects, account: account, client: client, version: versions[account.id, default: 0])
+                    guard accounts.contains(where: { $0.id == account.id }), credentialVersions[account.id, default: 0] == versions[account.id, default: 0] else {
+                        anyThrew = true
+                        continue
+                    }
                     result.projects = picked.projects
                     result.unreachable += picked.unreachable
                     result.rateLimited = picked.rateLimited
@@ -316,6 +326,10 @@ final class Store {
                 errors[account.id] = accountErrors[account.id] ?? Self.unreachableMessage(fullUnreachable[account.id] ?? [])
                 if full && errors[account.id] == nil { lastSuccessfulChecks[account.id] = .now }
             } catch {
+                guard accounts.contains(where: { $0.id == account.id }), credentialVersions[account.id, default: 0] == versions[account.id, default: 0] else {
+                    anyThrew = true
+                    continue
+                }
                 accountErrors[account.id] = error.localizedDescription
                 errors[account.id] = error.localizedDescription
                 all += mine // keep last known
@@ -326,7 +340,10 @@ final class Store {
             }
         }
         // An account added mid-refresh keeps the projects addAccount loaded; one removed mid-refresh stays gone.
-        all += projects.filter { p in !snapshot.contains { $0.id == p.accountID } }
+        let changed = Set(snapshot.filter { credentialVersions[$0.id, default: 0] != versions[$0.id, default: 0] }.map(\.id))
+        all.removeAll { changed.contains($0.accountID) }
+        all += projects.filter { p in changed.contains(p.accountID) || !snapshot.contains { $0.id == p.accountID } }
+        if !changed.isEmpty { anyThrew = true; lastFull = nil }
         let live = Set(accounts.map(\.id))
         var ids = Set<String>()
         projects = all.filter { live.contains($0.accountID) && ids.insert($0.id).inserted } // two tokens can see the same team
@@ -351,13 +368,14 @@ final class Store {
     /// Picks projects that appeared since the last full refresh. Vercel and Cloudflare: right away. GitHub: once the
     /// repo has a workflow run, since a token sees every repo and discovery doesn't fetch runs; so new repos get one
     /// runs call per full refresh until they have one, or until they've gone two weeks without a push.
-    private func autoPick(_ fetched: [Project], account: Account, client: any ProviderClient) async -> (projects: [Project], unreachable: [TeamRef], rateLimited: Bool) {
+    private func autoPick(_ fetched: [Project], account: Account, client: any ProviderClient, version: Int) async -> (projects: [Project], unreachable: [TeamRef], rateLimited: Bool) {
         guard known != nil else { return (fetched, [], false) } // refresh() records the first full pass across all accounts
         let cutoff = Date.now.addingTimeInterval(-14 * 86_400)
         // Old activity means it isn't new to you, just new to us (a team the token couldn't read before).
         let new = fetched.filter { !known!.contains($0.id) && ($0.lastActive ?? .distantFuture) > cutoff }
-        known!.formUnion(fetched.filter { ($0.lastActive ?? .distantFuture) <= cutoff }.map(\.id))
+        let older = fetched.filter { ($0.lastActive ?? .distantFuture) <= cutoff }.map(\.id)
         guard account.provider == .github else {
+            known!.formUnion(older)
             known!.formUnion(new.map(\.id))
             selected.formUnion(new.map(\.id))
             return (fetched, [], false)
@@ -372,6 +390,8 @@ final class Store {
                 polled.rateLimited = (error as? AppError)?.isRateLimit == true
             }
         }
+        guard accounts.contains(where: { $0.id == account.id }), credentialVersions[account.id, default: 0] == version else { return (fetched, [], false) }
+        known!.formUnion(older)
         var withRuns = Dictionary(polled.projects.filter { !$0.latest.isEmpty }.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         for p in new where !p.latest.isEmpty { withRuns[p.id] = p }
         known!.formUnion(withRuns.keys)
@@ -382,6 +402,25 @@ final class Store {
             return runs
         }
         return (projects, polled.unreachable, polled.rateLimited)
+    }
+
+    func replaceToken(for account: Account, token: String) async throws {
+        guard accounts.contains(where: { $0.id == account.id }) else { throw AppError.accountRemoved }
+        let version = credentialVersions[account.id, default: 0]
+        let teams = Set(projects.filter { $0.accountID == account.id && selected.contains($0.id) }.map(\.teamID))
+        let result = try await account.provider.client(token: token).projects(account: account, teams: teams, discover: true)
+        guard accounts.contains(where: { $0.id == account.id }), credentialVersions[account.id, default: 0] == version else { throw AppError.accountRemoved }
+        guard result.unreachable.isEmpty && !result.rateLimited else { throw AppError.incompleteValidation }
+        guard Keychain.set(token, for: account.id) else { throw AppError.keychain }
+        credentialVersions[account.id, default: 0] += 1
+        backoff[account.id] = nil
+        accountErrors[account.id] = nil
+        fullUnreachable[account.id] = nil
+        errors[account.id] = nil
+        lastFull = nil
+        lastPicked = nil
+        wakePolling()
+        Task { await refresh(full: true) }
     }
 
     private static func unreachableMessage(_ teams: [TeamRef]) -> String? {

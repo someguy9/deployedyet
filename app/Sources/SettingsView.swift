@@ -134,6 +134,10 @@ private struct AccountPane: View {
     @AppStorage("settings.collapsedProjectGroups") private var collapsedGroupsJSON = "[]"
     @State private var confirmRemove = false
     @State private var checking = false // only a refresh asked for here spins; background polls would flicker it
+    @State private var replacingToken = false
+    @State private var newToken = ""
+    @State private var validatingToken = false
+    @State private var tokenError: String?
 
     var body: some View {
         let all = store.projects.filter { $0.accountID == account.id }
@@ -198,6 +202,26 @@ private struct AccountPane: View {
                 .padding(.vertical, 4)
                 if let error = store.errors[account.id] {
                     Text(error).foregroundStyle(.red)
+                }
+                if replacingToken {
+                    VStack(alignment: .leading, spacing: 8) {
+                        SecureField("New \(account.provider.name) token", text: $newToken)
+                            .textFieldStyle(.roundedBorder)
+                            .disabled(validatingToken)
+                            .onSubmit(replaceToken)
+                        Text("We'll check the token before replacing the one in Keychain.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        if let tokenError { Text(tokenError).foregroundStyle(.red) }
+                        HStack {
+                            Button("Cancel") { newToken = ""; tokenError = nil; replacingToken = false }
+                                .disabled(validatingToken)
+                            Button("Validate & Replace", action: replaceToken)
+                                .disabled(validatingToken || newToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            if validatingToken { ProgressView().controlSize(.small) }
+                        }
+                    }
+                } else {
+                    Button("Replace Token…") { replacingToken = true }
                 }
                 if all.count > 12 {
                     HStack(spacing: 6) {
@@ -311,6 +335,23 @@ private struct AccountPane: View {
             }
         } message: {
             Text("The token is deleted from Keychain. You can add it again any time.")
+        }
+    }
+
+    private func replaceToken() {
+        let token = newToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !validatingToken, !token.isEmpty else { return }
+        validatingToken = true
+        tokenError = nil
+        Task {
+            defer { validatingToken = false }
+            do {
+                try await store.replaceToken(for: account, token: token)
+                newToken = ""
+                replacingToken = false
+            } catch {
+                tokenError = error.localizedDescription
+            }
         }
     }
 
