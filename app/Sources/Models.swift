@@ -258,6 +258,8 @@ struct Project: Identifiable, Hashable, Codable {
 enum AppError: LocalizedError {
     case http(Int, Provider)
     case keychain
+    case accountRemoved
+    case incompleteValidation
 
     /// The token lacks access, as opposed to a network blip or a 429/5xx worth retrying.
     var isAuth: Bool {
@@ -277,6 +279,8 @@ enum AppError: LocalizedError {
         case .http(let code, let p) where (500...599).contains(code): "\(p.name) is having trouble (\(code)). Checking again on the next poll."
         case .http(let code, let p): "\(p.name) returned an unexpected \(code)."
         case .keychain: "Couldn't save the token to Keychain."
+        case .accountRemoved: "This account is no longer available."
+        case .incompleteValidation: "Couldn't fully check this token. Try again when the provider is available."
         }
     }
 }

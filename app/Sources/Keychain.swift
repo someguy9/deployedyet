@@ -12,7 +12,9 @@ enum Keychain {
     }
 
     static func set(_ token: String, for id: UUID) -> Bool {
-        delete(id)
+        let status = SecItemUpdate(query(id) as CFDictionary, [kSecValueData as String: Data(token.utf8)] as CFDictionary)
+        if status == errSecSuccess { return true }
+        guard status == errSecItemNotFound else { return false }
         var q = query(id)
         q[kSecValueData as String] = Data(token.utf8)
         q[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
