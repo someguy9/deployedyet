@@ -3,18 +3,20 @@ import SwiftUI
 struct MenuView: View {
     @Environment(Store.self) private var store
     @State private var filter = DeployFilter()
+    @State private var showRecentHistory = false
     @State private var expandedWorkflowDeployments: Set<String> = []
     @FocusState private var searchFocused: Bool
 
-    private var matchingRows: [Deploy] { store.rows.filter(filter.matches) }
+    private var displayedRows: [Deploy] { showRecentHistory ? store.recentFetchedRows : store.rows }
+    private var matchingRows: [Deploy] { displayedRows.filter(filter.matches) }
 
     /// Now first, then by day, like an activity feed: Failed, In progress, Today, This week, Earlier.
     private var sections: [(title: String, rows: [Deploy])] {
         let order = ["Failed", "In progress", "Today", "This week", "Earlier"]
         let groups = Dictionary(grouping: matchingRows) { d -> String in
             switch d.state {
-            case .failed where store.needsFailureAttention(d): "Failed" // older failures sort by date with the rest
-            case .building: "In progress"
+            case .failed where !showRecentHistory && store.needsFailureAttention(d): "Failed" // older failures sort by date with the rest
+            case .building where !showRecentHistory: "In progress"
             default:
                 Calendar.current.isDateInToday(d.createdAt) ? "Today"
                     : Date.now.timeIntervalSince(d.createdAt) < 7 * 86_400 ? "This week" : "Earlier"
@@ -49,8 +51,8 @@ struct MenuView: View {
                 } else {
                 ScrollView {
                     // Only label the parts of a row that differ between rows: one team or one provider is noise.
-                    let showTeam = Set(store.rows.map(\.team)).count > 1
-                    let showProvider = Set(store.rows.map(\.provider)).count > 1
+                    let showTeam = Set(displayedRows.map(\.team)).count > 1
+                    let showProvider = Set(displayedRows.map(\.provider)).count > 1
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(sections, id: \.title) { section in
                             if sections.count > 1 || section.title == "Failed" {
@@ -153,8 +155,15 @@ struct MenuView: View {
                     .accessibilityLabel("Clear search and filters")
             }
             .labelsHidden()
+            Toggle("Show recent fetched history", isOn: $showRecentHistory)
+                .help("Show deployments already fetched for selected projects. This is not a complete history.")
+            if showRecentHistory {
+                Text("Recent fetched history only; provider results may be limited.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             HStack {
-                Text("\(matchingRows.count) of \(store.rows.count) deployments")
+                Text("\(matchingRows.count) of \(displayedRows.count) deployments")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
             }
