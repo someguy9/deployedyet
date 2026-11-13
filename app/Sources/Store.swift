@@ -169,6 +169,14 @@ final class Store {
             }
     }
 
+    /// The deployments already fetched for picked projects; providers may only return a limited recent set.
+    var recentFetchedRows: [Deploy] {
+        projects.filter { selected.contains($0.id) }.flatMap { project in
+            var seen: Set<String> = []
+            return tracked(project).filter { seen.insert($0.id).inserted }
+        }.sorted { $0.createdAt > $1.createdAt }
+    }
+
     private func acknowledgement(for deploy: Deploy) -> FailureAcknowledgement? {
         guard let project = projects.first(where: { $0.id == deploy.projectID }) else { return nil }
         return FailureAcknowledgement(accountID: project.accountID, projectID: project.id, deploymentID: deploy.id,

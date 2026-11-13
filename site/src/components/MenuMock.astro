@@ -60,6 +60,7 @@ const { label } = Astro.props;
         <span class="popup">All states<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m7 9 5-5 5 5"/><path d="m7 15 5 5 5-5"/></svg></span>
         <span class="button">Clear</span>
       </p>
+      <p class="history"><span class="checkbox"></span>Show recent fetched history</p>
       <p class="count">{rows.length} of {rows.length} deployments</p>
     </div>
     <div class="list">
@@ -175,6 +176,8 @@ const { label } = Astro.props;
   .popup, .button { background: var(--color-mac-fill); box-shadow: inset 0 1px 0 var(--color-mac-hairline); }
   .popup { flex: 1; justify-content: space-between; }
   .popup svg { width: calc(10 * var(--pt)); height: calc(10 * var(--pt)); color: var(--color-mac-label-2); }
+  .history { display: flex; align-items: center; gap: calc(5 * var(--pt)); }
+  .checkbox { width: calc(14 * var(--pt)); height: calc(14 * var(--pt)); border-radius: calc(3 * var(--pt)); background: var(--color-mac-fill); box-shadow: inset 0 0 0 1px var(--color-mac-hairline); }
   .count { font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); }
   .logo { display: block; width: calc(9 * var(--pt)); height: calc(9 * var(--pt)); margin-right: calc(1 * var(--pt)); opacity: 0.8; }
   .logo :global(svg) { display: block; width: 100%; height: 100%; }
