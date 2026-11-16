@@ -1,5 +1,12 @@
 [
   {
+    "tag_name": "v0.1.14",
+    "published_at": "2026-11-16T19:20:34Z",
+    "body": "## Look back without losing the current answer\n\n- Turn on **Show recent fetched history** to inspect older deployments already fetched for your selected projects.\n- Search and filter older successful, failed and canceled deployments. History follows your production/preview preferences and clearly states that provider results may be limited.\n- Your headline, menu bar status and notifications continue to reflect current deployments.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.14 (build 15)**\n\nBuilt from merged commit `1aae9ef90abff14d4d546ff106e81a6946892f0a` on `main`. Developer ID signed, Apple-notarized, stapled and Gatekeeper-verified. The attached `appcast.xml` carries the independently verified Sparkle-signed update enclosure.\n\nDMG SHA-256: `0b525f6f77212ef8a94050294449b731dba4c577d8348ad80878602de95a628c`\n\nChanges: https://github.com/someguy9/deployedyet/pull/16\n",
+    "draft": false,
+    "prerelease": false
+  },
+  {
     "tag_name": "v0.1.13",
     "published_at": "2026-11-10T20:47:32Z",
     "body": "## Recover an account without starting over\n\n- Replace an expired or revoked provider token directly in Settings with **Replace Token…**. Keep your account label, project selections and monitoring preferences.\n- The new token is checked before Keychain is updated. Failed, incomplete or rate-limited checks leave your saved token untouched. For selected GitHub repositories, validation includes Actions access.\n- Refreshes using an older token cannot overwrite the recovered account's newer state.\n\n**macOS 14 or later · Apple Silicon and Intel · Version 0.1.13 (build 14)**\n\nBuilt from commit `0dd7ab11952fe8e46ad9f7d3d2f1f586db159998` on `main`. Developer ID signed, Apple-notarized, stapled and Gatekeeper-verified. The attached `appcast.xml` carries the Sparkle-signed update enclosure.\n\nDMG SHA-256: `335e9ce284a5eff4347f1814704627476ae4c0f5dc35ced6238f170b98596999`\n",
