@@ -91,9 +91,16 @@ const { label } = Astro.props;
         </>
       ))}
     </div>
+    <details class="monitoring">
+      <summary>ⓞ &nbsp;Monitoring status</summary>
+      <div class="monitoring-accounts">
+        <p><strong>Vercel</strong><br />Last full check: 1m ago</p>
+        <p><strong>Cloudflare</strong><br />Last full check: 1m ago</p>
+        <p><strong>GitHub</strong><br />Last full check: 1m ago</p>
+      </div>
+    </details>
     <div class="foot">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-      <span class="updated">Updated 15s ago</span>
       <svg class="push" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/></svg>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
@@ -204,6 +211,9 @@ const { label } = Astro.props;
   .meta { display: flex; align-items: center; gap: calc(4 * var(--pt)); margin-top: calc(2 * var(--pt)); font-size: calc(10 * var(--pt)); color: var(--color-mac-label-3); white-space: nowrap; }
   .meta svg { width: calc(9 * var(--pt)); height: calc(9 * var(--pt)); }
   .sha { font-family: var(--font-mono); }
+  .monitoring { padding: calc(8 * var(--pt)) calc(14 * var(--pt)); font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); }
+  .monitoring summary { cursor: pointer; }
+  .monitoring-accounts { max-height: calc(160 * var(--pt)); overflow-y: auto; display: grid; gap: calc(8 * var(--pt)); padding-top: calc(6 * var(--pt)); }
   .foot { display: flex; align-items: center; gap: calc(14 * var(--pt)); padding: calc(10 * var(--pt)) calc(14 * var(--pt)); border-top: 1px solid var(--color-mac-hairline); color: var(--color-mac-label-2); }
   .foot svg { width: calc(14 * var(--pt)); height: calc(14 * var(--pt)); }
   .updated { font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-3); }

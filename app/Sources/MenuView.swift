@@ -4,6 +4,7 @@ struct MenuView: View {
     @Environment(Store.self) private var store
     @State private var filter = DeployFilter()
     @State private var showRecentHistory = false
+    @State private var showMonitoring = false
     @State private var expandedWorkflowDeployments: Set<String> = []
     @FocusState private var searchFocused: Bool
 
@@ -80,27 +81,30 @@ struct MenuView: View {
                     .padding(.horizontal, 4)
                     .padding(.bottom, 4)
                 }
-                .frame(maxHeight: 440)
+                .frame(maxHeight: showMonitoring ? 280 : 440)
                 .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
-            ForEach(store.accounts.filter { store.errors[$0.id] != nil }) { account in
-                Label("\(account.label): \(store.errors[account.id] ?? "")", systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .padding(.horizontal, 14)
-                    .padding(.bottom, 6)
+            if !store.accounts.isEmpty {
+                monitoringStatus
             }
 
             Divider()
 
             HStack(spacing: 14) {
                 Button { Task { await store.refreshNow() } } label: {
-                    Label("Refresh", systemImage: "arrow.clockwise")
+                    if store.refreshing {
+                        ProgressView().controlSize(.small)
+                            .accessibilityLabel("Refreshing deployments")
+                    } else {
+                        Label("Refresh", systemImage: "arrow.clockwise")
+                    }
                 }
                 .keyboardShortcut("r")
-                .help("Refresh now (⌘R)")
+                .disabled(store.refreshing)
+                .accessibilityLabel(store.refreshing ? "Refreshing deployments" : "Refresh deployments")
+                .help(store.refreshing ? "Refreshing deployments" : "Refresh now (⌘R)")
                 Spacer()
                 Button { openAndClose(URL(string: "https://buymeacoffee.com/someguy")) } label: {
                     Label("Buy me a coffee", systemImage: "cup.and.saucer")
@@ -120,6 +124,49 @@ struct MenuView: View {
             .padding(.vertical, 10)
         }
         .frame(width: 380)
+    }
+
+    private var monitoringStatus: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            DisclosureGroup(isExpanded: $showMonitoring) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(store.accounts) { account in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(account.label).fontWeight(.semibold)
+                                if let checked = store.lastSuccessfulChecks[account.id] {
+                                    Text("Last full check: \(checked.shortAgo(at: context.date))")
+                                } else {
+                                    Text("Never checked")
+                                }
+                                if let error = store.errors[account.id] {
+                                    Text(error).foregroundStyle(.red)
+                                }
+                                if let retry = store.backoff[account.id], retry > context.date {
+                                    Text("Cooldown: \(Int(ceil(retry.timeIntervalSince(context.date))))s remaining")
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityElement(children: .combine)
+                        }
+                    }
+                    .padding(.top, 6)
+                }
+                .frame(maxHeight: 160)
+                .fixedSize(horizontal: false, vertical: true)
+                if store.monitoringDegraded {
+                    Button("Open Settings…", action: showSettings)
+                        .accessibilityLabel("Open Settings to resolve monitoring issues")
+                        .padding(.top, 6)
+                }
+            } label: {
+                Label(store.monitoringDegraded ? "Monitoring needs attention" : "Monitoring status", systemImage: store.monitoringDegraded ? "exclamationmark.triangle.fill" : "checkmark.circle")
+                    .foregroundStyle(store.monitoringDegraded ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary))
+            }
+            .font(.caption)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+        }
     }
 
     private var filters: some View {

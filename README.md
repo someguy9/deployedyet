@@ -30,6 +30,7 @@
 - Collapse project groups in Settings to keep large accounts manageable, or collapse and expand all groups at once. Search reveals matching groups without losing your saved collapsed state.
 - Replace an account's token in Settings without removing the account or losing your project picks. The app checks the new token before saving it in Keychain.
 - You can get a notification when a deploy fails or production goes live. Click the bell on a single build to hear when that one finishes.
+- Monitoring status in the menu shows each account’s last successful full check, errors and any rate-limit retry countdown, with a Settings shortcut for recovery. Cached deployments stay visible when a check fails. Refresh shows progress and respects the cooldown.
 - It checks every 5 seconds while something is building and once a minute otherwise. When it gets rate limited it backs off, and it catches up when your Mac wakes. Opening the menu checks right away, and if you turn on "Check right after I push", a push from your Mac shows up within seconds.
 
 <p align="center">
