@@ -103,7 +103,7 @@ final class Store {
     private var lastPicked: Date?
     private var fullUnreachable: [UUID: [TeamRef]] = [:]
     private var accountErrors: [UUID: String] = [:]
-    private var backoff: [UUID: Date] = [:]
+    private(set) var backoff: [UUID: Date] = [:]
     private var credentialVersions: [UUID: Int] = [:]
     private var wobbleTask: Task<Void, Never>?
     private let notificationDelegate = NotificationDelegate()
@@ -323,16 +323,23 @@ final class Store {
                     result.unreachable += picked.unreachable
                     result.rateLimited = picked.rateLimited
                 }
-                if result.rateLimited { backoff[account.id] = .now.addingTimeInterval(60) }
+                if result.rateLimited {
+                    backoff[account.id] = .now.addingTimeInterval(60)
+                    accountErrors[account.id] = "Rate limited. Waiting to retry."
+                    anyThrew = true
+                    lastFull = nil
+                }
                 let failed = Set(result.unreachable.map(\.id))
                 all += result.projects
+                if result.rateLimited { all += mine }
                 // Last known for teams we didn't ask or that blipped; the dedupe below keeps fresh copies first.
-                all += mine.filter { p in failed.contains(p.teamID) || teams.map { !$0.contains(p.teamID) } ?? false }
+                all += mine.filter { p in failed.contains(p.teamID) || (teams.map { !$0.contains(p.teamID) } ?? false) }
                 let carried = (fullUnreachable[account.id] ?? []).filter { t in teams.map { !$0.contains(t.id) } ?? false }
                 fullUnreachable[account.id] = Array(Set(result.unreachable + carried))
-                if full { accountErrors[account.id] = nil }
+                if full && !result.rateLimited { accountErrors[account.id] = nil }
                 errors[account.id] = accountErrors[account.id] ?? Self.unreachableMessage(fullUnreachable[account.id] ?? [])
-                if full && errors[account.id] == nil { lastSuccessfulChecks[account.id] = .now }
+                    ?? (result.rateLimited ? "Rate limited. Waiting to retry." : nil)
+                if full && !result.rateLimited && errors[account.id] == nil { lastSuccessfulChecks[account.id] = .now }
             } catch {
                 guard accounts.contains(where: { $0.id == account.id }), credentialVersions[account.id, default: 0] == versions[account.id, default: 0] else {
                     anyThrew = true
@@ -454,8 +461,13 @@ final class Store {
         guard Keychain.set(token, for: account.id) else { throw AppError.keychain }
         accounts.append(account)
         fullUnreachable[account.id] = result.unreachable
-        if result.rateLimited { backoff[account.id] = .now.addingTimeInterval(60) }
+        if result.rateLimited {
+            backoff[account.id] = .now.addingTimeInterval(60)
+            accountErrors[account.id] = "Rate limited. Waiting to retry."
+            lastFull = nil
+        }
         errors[account.id] = Self.unreachableMessage(result.unreachable)
+            ?? (result.rateLimited ? "Rate limited. Waiting to retry." : nil)
         let cutoff = Date.now.addingTimeInterval(-14 * 86_400)
         let recent = fetched
             .filter { ($0.lastActive ?? .distantPast) > cutoff }
