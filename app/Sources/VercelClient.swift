@@ -112,6 +112,8 @@ private struct Lossy<T: Decodable>: Decodable {
 private struct VDeployment: Decodable {
     let id: String
     let readyState: String?
+    let aliasError: AliasError?
+    struct AliasError: Decodable { let message: String?; let code: String? }
     let target: String?
     let url: String?
     let createdAt: Double
@@ -123,6 +125,13 @@ private struct VDeployment: Decodable {
         let githubCommitMessage, githubCommitRef, githubCommitSha: String?
         let gitlabCommitMessage, gitlabCommitRef, gitlabCommitSha: String?
         let bitbucketCommitMessage, bitbucketCommitRef, bitbucketCommitSha: String?
+    }
+
+    private var failureDetail: String? {
+        let message = aliasError?.message?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        let code = aliasError?.code?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        if let message, let code { return "\(message) (\(code))" }
+        return message ?? code
     }
 
     func deploy(project: VProject, team: Team, account: Account) -> Deploy {
@@ -150,7 +159,8 @@ private struct VDeployment: Decodable {
             url: URL(string: "https://vercel.com/\(team.slug)/\(project.name)/\(slug)"),
             siteURL: url.flatMap { URL(string: "https://\($0)") },
             projectURL: URL(string: "https://vercel.com/\(team.slug)/\(project.name)"),
-            commit: meta?.githubCommitSha ?? meta?.gitlabCommitSha ?? meta?.bitbucketCommitSha
+            commit: meta?.githubCommitSha ?? meta?.gitlabCommitSha ?? meta?.bitbucketCommitSha,
+            failureDetail: state == .failed ? failureDetail : nil
         )
     }
 }

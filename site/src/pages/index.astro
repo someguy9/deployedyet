@@ -16,7 +16,7 @@ const version = await fetch("https://api.github.com/repos/someguy9/deployedyet/r
 const [, ...details] = features;
 
 const tour = [
-  { head: "Broken stuff goes to the top", body: "See each project’s newest deploy and any older builds still running. Recent unacknowledged failures come first, then builds, then the rest by date. Acknowledge a failure to keep it visible without the noise." },
+  { head: "Broken stuff goes to the top", body: "See each project’s newest deploy and any older builds still running. Recent unacknowledged failures come first, then builds, then the rest by date. When available, provider-reported failure details appear in the row. Acknowledge a failure to keep it visible without the noise." },
   { head: "Find a deployment fast", body: "Search and filter current rows, or show recent fetched history for older deployments. History is limited to provider results; monitoring status shows each account’s last full check, errors and retry countdown." },
   { head: "Keep large accounts manageable", body: "Collapse project groups in Settings, or collapse and expand them all at once. Search reveals matching projects without losing your saved layout." },
   { head: "Replace a token in place", body: "Validate a replacement in Settings without removing your account or losing your project picks." },
