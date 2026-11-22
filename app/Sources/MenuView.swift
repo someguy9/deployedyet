@@ -400,6 +400,9 @@ struct DeployRow: View {
                 if let message = deploy.message?.components(separatedBy: .newlines).first, !message.isEmpty {
                     Text(message).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
+                if let detail = visibleFailureDetail {
+                    Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                }
                 HStack(spacing: 4) {
                     if showProvider {
                         ProviderLogo(provider: deploy.provider, size: 9)
@@ -456,7 +459,7 @@ struct DeployRow: View {
                 }
             }
         }
-        .help("Open this deploy. Right-click for more.")
+        .help(visibleFailureDetail.map { "\($0)\n\nOpen this deploy. Right-click for more." } ?? "Open this deploy. Right-click for more.")
         .contextMenu {
             Button("Open deploy") { open(deploy.url) }
             Button("Open site") { open(deploy.siteURL) }.disabled(deploy.siteURL == nil)
@@ -500,10 +503,12 @@ struct DeployRow: View {
         return (bare ? "" : "· ") + parts.joined(separator: " · ")
     }
 
+    private var visibleFailureDetail: String? { deploy.state == .failed ? deploy.failureDetail : nil }
+
     private var accessibilitySummary: String {
         let when = deploy.createdAt.formatted(.relative(presentation: .named))
         return [deploy.projectName, deploy.isProduction ? nil : "preview", deploy.state.label, store.isAcknowledged(deploy) ? "acknowledged" : nil, when,
-                deploy.message?.components(separatedBy: .newlines).first, deploy.branch.map { "branch \($0)" }, deploy.team]
+                deploy.message?.components(separatedBy: .newlines).first, visibleFailureDetail, deploy.branch.map { "branch \($0)" }, deploy.team]
             .compactMap { $0 }.joined(separator: ", ")
     }
 }

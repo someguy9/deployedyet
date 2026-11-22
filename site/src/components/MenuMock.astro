@@ -18,7 +18,7 @@ const sections = [
     { provider: "cloudflare", name: "sharetext", message: "Add live clipboard rooms", branch: "main", sha: "9419a75", built: "2m 4s", when: "3h ago" },
   ] },
   { title: "This week", rows: [
-    { provider: "cloudflare", name: "baybridgestatus", message: "Show lane closures on the map", branch: "main", sha: "4e1b9d2", built: "41s", when: "2d ago", acknowledged: true },
+    { provider: "cloudflare", name: "baybridgestatus", message: "Show lane closures on the map", branch: "main", sha: "4e1b9d2", built: "41s", when: "2d ago", acknowledged: true, failureDetail: "Build failed" },
     { provider: "vercel", name: "titlecapitalize", message: "Support AP and Chicago style headlines", branch: "main", sha: "a7c03f5", built: "28s", when: "4d ago" },
     { provider: "vercel", name: "colorkit", message: "Faster palette generator", branch: "main", sha: "5e9aad1", built: "52s", when: "5d ago" },
   ] },
@@ -74,6 +74,7 @@ const { label } = Astro.props;
               <div class="text">
                 <p class="line"><span><span class="name">{r.name}</span>{'acknowledged' in r && <span class="acknowledged"> acknowledged</span>}</span><span class:list={["when", { building: 'building' in r }]}>{r.when}</span></p>
                 <p class="caption clip">{r.message}</p>
+                {'failureDetail' in r && <p class="failure-detail" title={r.failureDetail}>{r.failureDetail}</p>}
                 <p class="meta">
                   <span class="logo" style={`color: ${tints[r.provider]};`} set:html={logos[r.provider]} />
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>
@@ -207,6 +208,7 @@ const { label } = Astro.props;
   .acknowledged { font-size: calc(10.5 * var(--pt)); }
   .when { font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); font-variant-numeric: tabular-nums; }
   .when.building { color: #ff9500; }
+  .failure-detail { margin-top: calc(2 * var(--pt)); font-size: calc(10.5 * var(--pt)); color: var(--color-mac-label-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .clip { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .meta { display: flex; align-items: center; gap: calc(4 * var(--pt)); margin-top: calc(2 * var(--pt)); font-size: calc(10 * var(--pt)); color: var(--color-mac-label-3); white-space: nowrap; }
   .meta svg { width: calc(9 * var(--pt)); height: calc(9 * var(--pt)); }

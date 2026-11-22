@@ -176,7 +176,8 @@ private struct Script: Decodable {
             url: URL(string: "https://dash.cloudflare.com/\(cf.id)/workers/services/view/\(id)/production/builds/\(uuid)"),
             siteURL: site,
             projectURL: dashboard,
-            commit: meta?.commit_hash
+            commit: meta?.commit_hash,
+            failureDetail: state == .failed && build.build_outcome == "terminated" ? "Build terminated" : nil
         )
         // The build's own `wrangler deploy` moves the script mid-build. That script change is this build, not
         // a separate "Deployed with wrangler", so hide it; a wrangler deploy after the build ends still shows.
@@ -242,6 +243,12 @@ private struct PagesDeploy: Decodable {
         let status: String?
         let started_on: String?
         let ended_on: String?
+
+        var failureDetail: String? {
+            guard status == "failure", let name = name?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty else { return nil }
+            let stage = name.replacingOccurrences(of: "_", with: " ")
+            return "\(stage.prefix(1).uppercased())\(stage.dropFirst()) failed"
+        }
     }
 
     struct Trigger: Decodable {
@@ -279,7 +286,8 @@ private struct PagesDeploy: Decodable {
             url: URL(string: "https://dash.cloudflare.com/\(cf.id)/pages/view/\(project.name)/\(id)"),
             siteURL: url.flatMap(URL.init(string:)),
             projectURL: URL(string: "https://dash.cloudflare.com/\(cf.id)/pages/view/\(project.name)"),
-            commit: deployment_trigger?.metadata?.commit_hash
+            commit: deployment_trigger?.metadata?.commit_hash,
+            failureDetail: state == .failed ? latest_stage?.failureDetail : nil
         )
     }
 }

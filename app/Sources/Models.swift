@@ -206,6 +206,8 @@ struct Deploy: Identifiable, Hashable, Codable {
     var isManual = false
     /// Full commit SHA when the provider knows it.
     var commit: String?
+    /// Provider-reported diagnosis, when available. Older cached deployments omit this field.
+    var failureDetail: String?
     var failureSignature: String?
     var workflows: [DeployWorkflow]?
 
@@ -283,4 +285,8 @@ enum AppError: LocalizedError {
         case .incompleteValidation: "Couldn't fully check this token. Try again when the provider is available."
         }
     }
+}
+
+extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
 }
